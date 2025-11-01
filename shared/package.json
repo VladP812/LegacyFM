@@ -1,0 +1,18 @@
+{
+  "name": "shared",
+  "version": "1.0.0",
+  "description": "Schemas, DTOs, and shared functions",
+  "license": "ISC",
+  "author": "Durhack 25",
+  "scripts": {
+  },
+  "devDependencies": {
+    "@types/typescript": "^0.4.29",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "zod": "^4.1.11"
+  }
+}
+
+
