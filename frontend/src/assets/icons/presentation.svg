@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg version="1.0" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 width="800px" height="800px" viewBox="0 0 64 64" enable-background="new 0 0 64 64" xml:space="preserve">
+<g>
+	<rect x="8" y="7.998" fill="#F9EBB2" width="48" height="32"/>
+	<g>
+		<path fill="#394240" d="M60-0.002H4c-2.211,0-4,1.789-4,4v40c0,2.211,1.789,4,4,4h18.312l-5.777,10
+			c-1.105,1.914-0.449,4.359,1.465,5.465s4.359,0.449,5.465-1.465l8.086-14h0.898l8.086,14c1.105,1.914,3.551,2.57,5.465,1.465
+			s2.57-3.551,1.461-5.465l-5.777-10H60c2.211,0,4-1.789,4-4v-40C64,1.787,62.211-0.002,60-0.002z M56,39.998H8v-32h48V39.998z"/>
+		<rect x="28" y="19.998" fill="#394240" width="8" height="16"/>
+		<rect x="16" y="27.998" fill="#394240" width="8" height="8"/>
+		<rect x="40" y="11.998" fill="#394240" width="8" height="24"/>
+	</g>
+</g>
+</svg>

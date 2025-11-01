@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg version="1.0" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 width="800px" height="800px" viewBox="0 0 64 64" enable-background="new 0 0 64 64" xml:space="preserve">
+<g>
+	<path fill="#394240" d="M60.406,4.023c-0.324,0-0.664,0.043-1.023,0.133L44,8L20,0L4,4C1.613,4.797,0,6.789,0,9v47.574
+		c0,1.824,1.363,3.398,3.527,3.398c0.457,0,0.949-0.07,1.473-0.223L20,56l24,8l16-4c2.18-0.645,4-2.414,4-4.625V8
+		C64,6.066,62.66,4.023,60.406,4.023z M28,11.102l8,2.664v39.133l-8-2.664V11.102z M8,50.754V11.246l12-2.812v39.32L8,50.754z
+		 M56,52.754l-12,2.812V16l12-2.754V52.754z"/>
+	<g>
+		<polygon fill="#45AAB8" points="28,50.234 36,52.898 36,13.766 28,11.102 		"/>
+		<polygon fill="#45AAB8" points="8,50.754 20,47.754 20,8.434 8,11.246 		"/>
+		<polygon fill="#45AAB8" points="44,16 44,55.566 56,52.754 56,13.246 		"/>
+	</g>
+	<polygon opacity="0.2" fill="#231F20" points="28,50.234 36,52.898 36,13.766 28,11.102 	"/>
+</g>
+</svg>
