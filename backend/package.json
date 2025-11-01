@@ -1,6 +1,6 @@
 {
     "scripts": {
-        "dev": "cross-env NODE_ENV=development tsx --watch src/main.ts"
+        "dev": "cross-env NODE_ENV=dev tsx --watch src/main.ts"
     },
     "dependencies": {
         "@elevenlabs/elevenlabs-js": "^2.21.0",

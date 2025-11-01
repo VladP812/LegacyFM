@@ -7,11 +7,16 @@ import path from "path";
 import db from "./plugins/db";
 import { radioStationRoutes } from "./modules/radio_stations/radio_station_routes";
 
-loadEnvFile(path.join(__dirname, "../.env.development"));
+const envPath = path.join(__dirname, "../.env.development");
+loadEnvFile(envPath);
+
+if (process.env.NODE_ENV != "dev") {
+    throw new Error("Set NODE_ENV=dev in .env.development");
+}
 
 const fastify = Fastify({
     logger: {
-        level: process.env.NODE_ENV == "development" ? "debug" : "info"
+        level: process.env.NODE_ENV == "dev" ? "debug" : "info"
     }
 });
 
