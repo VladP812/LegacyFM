@@ -4,8 +4,8 @@ import { hasZodFastifySchemaValidationErrors, serializerCompiler, validatorCompi
 
 import { loadEnvFile } from "process";
 import path from "path";
-import testRoutes from "./modules/testmodule/test_routes";
 import db from "./plugins/db";
+import { radioStationRoutes } from "./modules/radio_stations/radio_station_routes";
 
 loadEnvFile(path.join(__dirname, "../.env.development"));
 
@@ -32,6 +32,6 @@ fastify.setErrorHandler((err, req, reply) => {
 
 // database
 fastify.register(db);
-fastify.register(testRoutes);
+fastify.register(radioStationRoutes);
 
 fastify.listen({port: 11337});
