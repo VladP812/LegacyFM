@@ -5,6 +5,7 @@ import { hasZodFastifySchemaValidationErrors, serializerCompiler, validatorCompi
 import { loadEnvFile } from "process";
 import path from "path";
 import testRoutes from "./modules/testmodule/test_routes";
+import db from "./plugins/db";
 
 loadEnvFile(path.join(__dirname, "../.env.development"));
 
@@ -23,23 +24,14 @@ fastify.register(fastifyCors, {
 fastify.setValidatorCompiler(validatorCompiler);
 fastify.setSerializerCompiler(serializerCompiler);
 
-// generic response interceptor for zod errors returning basic error message instead of a full zod error
+// standardized response interceptor for 
 fastify.setErrorHandler((err, req, reply) => {
-  if (hasZodFastifySchemaValidationErrors(err)) {
-    return reply.code(400).send({
-      error: 'Validation Error',
-      message: "Request doesn't match the schema",
-      statusCode: 400,
-      details: {
-        issues: err.validation,
-        method: req.method,
-        url: req.url,
-      },
-    });
-  }
-  return reply.send(err);
+    const code = err.statusCode ?? 500;
+    return reply.code(code).send(err.message);
 });
 
+// database
+fastify.register(db);
 fastify.register(testRoutes);
 
 fastify.listen({port: 11337});
