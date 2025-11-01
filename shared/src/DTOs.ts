@@ -8,7 +8,12 @@ const RadioStationSchema = z.object({
     description: z.string().min(1),
     lat: z.number(),
     lon: z.number()
-});
+}).strict();
 export const GetStationsResponse = z.array(RadioStationSchema);
 export type RadioStationType = z.infer<typeof RadioStationSchema>;
 export type GetStationsResponseType = z.infer<typeof GetStationsResponse>;
+
+
+export const GetRadioStreamQueryString = z.object({
+    id: z.coerce.number()
+});
