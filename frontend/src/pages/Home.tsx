@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import GlobeComponent, { type LocationPoint } from '../components/Globe';
 import Card, { CardHeader, CardTitle, CardBody } from '../components/core/Card';
 import { TextPrimary, TextSecondary, GlassBorder, GlassHighlight } from '../assets/COLOURS';
 import { getAccentByIndex } from '../utils/colourUtils';
-//import type { TestRequestType, TestResponseType } from "@shared/DTOs";
+import type {GetStationsResponseType} from "@shared/DTOs";
 
 import Globe2Icon from '../assets/icons/globe-2.svg?react';
 import LocationPinIcon from '../assets/icons/location-pin.svg?react';
@@ -18,7 +18,7 @@ import StarIcon from '../assets/icons/star.svg?react';
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<LocationPoint | null>(null);
   const [playingLocation, setPlayingLocation] = useState<LocationPoint | null>(null);
-  const [response, setResponse] = useState<string | null>(null);
+  const [response, setResponse] = useState<GetStationsResponseType | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   const handleLocationClick = (location: LocationPoint) => {
@@ -49,16 +49,21 @@ export default function Home() {
     }
   };
 
- // const handleSend = async (body: TestRequestType) => {
- //   try {
- //     const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/test`, body);
- //     const data: TestResponseType = res.data;
- //     setResponse(data.message);
- //   }
- //   catch (e: any) {
- //     setResponse(e.response?.status + e.message);
- //   }
- // };
+  const handleSend = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/stations`);
+      const data: GetStationsResponseType = res.data;
+      console.log(data);
+      setResponse(data);
+    }
+    catch (e: any) {
+      setResponse(e.response?.status + e.message);
+    }
+  };
+
+  useEffect(() => {
+      handleSend();
+  }, []);
 
   return (
     <PageContainer>
