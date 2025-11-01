@@ -4,15 +4,21 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import GlobeComponent, { type LocationPoint } from '../components/Globe';
-import GlassButton from '../components/core/Button';
-import { TextPrimary, TextSecondary, BrandPrimary, BrandSecondary, BrandTertiary, BrandQuaternary, accentPrimary, GlassBg, GlassBorder, GlassHighlight } from '../assets/COLOURS';
+import Card, { CardHeader, CardTitle, CardBody } from '../components/core/Card';
+import { TextPrimary, TextSecondary, GlassBorder, GlassHighlight } from '../assets/COLOURS';
+import { getAccentByIndex } from '../utils/colourUtils';
 import type { TestRequestType, TestResponseType } from "@shared/DTOs";
+
+import Globe2Icon from '../assets/icons/globe-2.svg?react';
+import LocationPinIcon from '../assets/icons/location-pin.svg?react';
+import CompassIcon from '../assets/icons/compass.svg?react';
+import MapIcon from '../assets/icons/map.svg?react';
+import StarIcon from '../assets/icons/star.svg?react';
 
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<LocationPoint | null>(null);
-  const [stringg, setStringg] = useState<string>("");
-  const [numberr, setNumberr] = useState<number>(0);
   const [response, setResponse] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   const handleLocationClick = (location: LocationPoint) => {
     setSelectedLocation(location);
@@ -21,6 +27,17 @@ export default function Home() {
 
   const handleClosePanel = () => {
     setSelectedLocation(null);
+    setIsPlaying(false);
+  };
+
+  const handlePlay = () => {
+    alert('Play event triggered! Starting playback...');
+    setIsPlaying(true);
+  };
+
+  const handleStop = () => {
+    alert('Stop event triggered! Stopping playback...');
+    setIsPlaying(false);
   };
 
   const handleSend = async (body: TestRequestType) => {
@@ -37,93 +54,124 @@ export default function Home() {
   return (
     <PageContainer>
       <GlobeSection>
-        <GlobeComponent onLocationClick={handleLocationClick} />
+        <GlobeComponent 
+          onLocationClick={handleLocationClick}
+          selectedLocation={selectedLocation}
+        />
       </GlobeSection>
 
-      <FloatingHeader>
-        <HeaderTitle>🌍 World Explorer</HeaderTitle>
-        <HeaderSubtitle>Discover locations across the globe</HeaderSubtitle>
-      </FloatingHeader>
-
-      <ApiTestCard>
-        <CardTitle>API Test</CardTitle>
-        <ApiInput 
-          value={stringg}
-          type="text"
-          placeholder="Enter string"
-          onChange={(e) => setStringg(e.target.value)}
-        />
-        <ApiInput 
-          value={numberr}
-          type="number"
-          placeholder="Enter number"
-          onChange={(e) => setNumberr(parseInt(e.target.value))}
-        />
-        <GlassButton
-          onClick={() => handleSend({stringg: stringg, numberr: numberr})}
-          fullWidth
-        > 
-          Send
-        </GlassButton>
-        {response && (
-          <ApiResponse>{response}</ApiResponse>
-        )}
-      </ApiTestCard>
+      <Card position="top-left" minWidth="280px">
+        <HeaderContainer>
+          <IconWrapper $color={getAccentByIndex(0)}>
+            <Globe2Icon width={40} height={40} />
+          </IconWrapper>
+          <div>
+            <HeaderTitle>Legacy FM</HeaderTitle>
+            <HeaderSubtitle>Discover dying traditions, cultures, and stories</HeaderSubtitle>
+          </div>
+        </HeaderContainer>
+      </Card>
 
       {selectedLocation && (
-        <LocationCard>
+        <Card position="center-right" width="400px">
           <CardHeader>
-            <LocationName>{selectedLocation.name}</LocationName>
+            <LocationHeader>
+              <IconWrapper $color={selectedLocation.color || getAccentByIndex(3)}>
+                <LocationPinIcon width={28} height={28} />
+              </IconWrapper>
+              <LocationName>{selectedLocation.name}</LocationName>
+            </LocationHeader>
             <CloseButton onClick={handleClosePanel}>×</CloseButton>
           </CardHeader>
           <CardBody>
+            <LocationTitle>{selectedLocation.locationName}</LocationTitle>
+            <LocationDescription>{selectedLocation.description}</LocationDescription>
+            
+            <Divider />
+            
             <DataRow>
-              <DataLabel>Latitude</DataLabel>
-              <DataValue>{selectedLocation.lat.toFixed(4)}°</DataValue>
+              <DataLabel>
+                <CompassIcon width={20} height={20} />
+                <span>Coordinates</span>
+              </DataLabel>
+              <CoordinatesGroup>
+                <DataValue $color={getAccentByIndex(1)}>{selectedLocation.lat.toFixed(4)}°</DataValue>
+                <DataValue $color={getAccentByIndex(2)}>{selectedLocation.lon.toFixed(4)}°</DataValue>
+              </CoordinatesGroup>
             </DataRow>
             <DataRow>
-              <DataLabel>Longitude</DataLabel>
-              <DataValue>{selectedLocation.lon.toFixed(4)}°</DataValue>
+              <DataLabel>
+                <StarIcon width={20} height={20} />
+                <span>Location ID</span>
+              </DataLabel>
+              <DataValue $color={getAccentByIndex(4)}>#{selectedLocation.id}</DataValue>
             </DataRow>
-            <DataRow>
-              <DataLabel>Location ID</DataLabel>
-              <DataValue>#{selectedLocation.id}</DataValue>
-            </DataRow>
+            
+            <Divider />
+            
+            <PlaySection>
+              {!isPlaying ? (
+                <PlayButton onClick={handlePlay}>
+                  <PlayIcon>▶</PlayIcon>
+                  <span>Listen to Station</span>
+                </PlayButton>
+              ) : (
+                <>
+                  <StopButton onClick={handleStop}>
+                    <StopIcon>■</StopIcon>
+                    <span>Stop</span>
+                  </StopButton>
+                  <LiveStreamIndicator>
+                    <LiveWaveAnimation $color={selectedLocation.color || getAccentByIndex(0)}>
+                      <WaveBar style={{ animationDelay: '0s' }} />
+                      <WaveBar style={{ animationDelay: '0.1s' }} />
+                      <WaveBar style={{ animationDelay: '0.2s' }} />
+                      <WaveBar style={{ animationDelay: '0.3s' }} />
+                      <WaveBar style={{ animationDelay: '0.4s' }} />
+                    </LiveWaveAnimation>
+                    <PlaybackLabel>
+                      <LiveIndicator $color={selectedLocation.color || getAccentByIndex(0)} />
+                      Streaming Live
+                    </PlaybackLabel>
+                  </LiveStreamIndicator>
+                </>
+              )}
+            </PlaySection>
           </CardBody>
-          <CardFooter>
-            ✨ Explore more data about this location
-          </CardFooter>
-        </LocationCard>
+        </Card>
       )}
 
-      <InstructionsCard>
-        <CardTitle>How to Explore</CardTitle>
+      <Card position="bottom-left" minWidth="260px">
+        <CardTitle>Navigation Guide</CardTitle>
         <InstructionItem>
-          <Icon>🖱️</Icon>
-          <span>Drag to rotate</span>
+          <IconBadge $color={getAccentByIndex(0)}>
+            <CompassIcon width={24} height={24} />
+          </IconBadge>
+          <span>Drag to rotate the globe</span>
         </InstructionItem>
         <InstructionItem>
-          <Icon>🔍</Icon>
-          <span>Scroll to zoom</span>
+          <IconBadge $color={getAccentByIndex(1)}>
+            <MapIcon width={24} height={24} />
+          </IconBadge>
+          <span>Scroll to zoom in/out</span>
         </InstructionItem>
         <InstructionItem>
-          <Icon>📍</Icon>
-          <span>Click points for info</span>
+          <IconBadge $color={getAccentByIndex(2)}>
+            <LocationPinIcon width={24} height={24} />
+          </IconBadge>
+          <span>Click markers for details</span>
         </InstructionItem>
-      </InstructionsCard>
+      </Card>
     </PageContainer>
   );
 }
 
-// ...existing code... (keep all the styled components below)
 const PageContainer = styled.div`
   display: flex;
   min-height: 100vh;
   width: 100%;
-  background: #0a0e0d;
   position: relative;
   overflow: hidden;
-  padding: 2rem;
   
   @media (max-width: 768px) {
     padding: 1rem;
@@ -139,26 +187,25 @@ const GlobeSection = styled.div`
   z-index: 0;
 `;
 
-const FloatingHeader = styled.div`
-  position: absolute;
-  top: 2rem;
-  left: 2rem;
-  background: ${GlassBg};
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 1.5rem 2.5rem;
+const HeaderContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const IconWrapper = styled.div<{ $color: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
   border-radius: 12px;
-  border: 2px solid ${GlassBorder};
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-  max-width: 400px;
+  background: ${props => `${props.$color}20`};
+  border: 2px solid ${props => `${props.$color}40`};
+  flex-shrink: 0;
   
-  @media (max-width: 768px) {
-    top: 1rem;
-    left: 1rem;
-    right: 1rem;
-    max-width: none;
-    padding: 1rem 1.5rem;
+  svg {
+    fill: ${props => props.$color};
   }
 `;
 
@@ -173,110 +220,14 @@ const HeaderTitle = styled.h1`
 const HeaderSubtitle = styled.p`
   font-size: 0.85rem;
   color: ${TextSecondary};
-  margin: 0.5rem 0 0 0;
+  margin: 0.25rem 0 0 0;
   font-weight: 400;
 `;
 
-const ApiTestCard = styled.div`
-  position: absolute;
-  top: 2rem;
-  right: 2rem;
-  background: ${GlassBg};
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 2px solid ${GlassBorder};
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-  min-width: 280px;
+const LocationHeader = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  
-  @media (max-width: 768px) {
-    top: auto;
-    bottom: 8rem;
-    right: 1rem;
-    left: 1rem;
-    min-width: auto;
-  }
-`;
-
-const ApiInput = styled.input`
-  background: ${GlassHighlight};
-  border: 1px solid ${GlassBorder};
-  border-radius: 8px;
-  padding: 0.75rem;
-  color: ${TextPrimary};
-  font-size: 0.9rem;
-  outline: none;
-  transition: all 0.2s ease;
-  
-  &:focus {
-    border-color: ${BrandPrimary};
-    box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.1);
-  }
-  
-  &::placeholder {
-    color: ${TextSecondary};
-  }
-`;
-
-const ApiResponse = styled.div`
-  background: ${GlassHighlight};
-  border: 1px solid ${GlassBorder};
-  border-radius: 8px;
-  padding: 0.75rem;
-  color: ${TextPrimary};
-  font-size: 0.85rem;
-  word-break: break-word;
-`;
-
-const LocationCard = styled.div`
-  position: absolute;
-  top: 50%;
-  right: 2rem;
-  transform: translateY(-50%);
-  background: ${GlassBg};
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 12px;
-  border: 3px solid ${GlassBorder};
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
-  z-index: 10;
-  width: 380px;
-  overflow: hidden;
-  animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  
-  @keyframes slideInRight {
-    from {
-      transform: translateY(-50%) translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(-50%) translateX(0);
-      opacity: 1;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    right: 1rem;
-    left: 1rem;
-    width: auto;
-    top: auto;
-    bottom: 1rem;
-    transform: none;
-  }
-`;
-
-const CardHeader = styled.div`
-  background: ${GlassHighlight};
-  padding: 1.5rem 2rem;
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid ${GlassBorder};
+  gap: 0.75rem;
 `;
 
 const LocationName = styled.h2`
@@ -288,37 +239,41 @@ const LocationName = styled.h2`
 `;
 
 const CloseButton = styled.button`
-  background: rgba(245, 166, 91, 0.2);
-  border: 2px solid ${accentPrimary};
-  color: ${accentPrimary};
-  width: 32px;
-  height: 32px;
+  background: ${GlassHighlight};
+  border: 2px solid ${GlassBorder};
+  color: ${TextSecondary};
+  min-width: 36px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 1.3rem;
-  font-weight: bold;
-  backdrop-filter: blur(8px);
+  font-size: 1.8rem;
+  font-weight: 300;
+  padding: 0;
+  flex-shrink: 0;
+  line-height: 0.8;
+  font-family: Arial, sans-serif;
 
   &:hover {
-    background: ${accentPrimary};
+    background: ${getAccentByIndex(0)};
+    border-color: ${getAccentByIndex(0)};
     color: ${TextPrimary};
-    transform: rotate(90deg);
   }
-`;
-
-const CardBody = styled.div`
-  padding: 2rem;
+  
+  &:active {
+    transform: scale(0.95);
+  }
 `;
 
 const DataRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.875rem 0;
+  padding: 1rem 0;
   border-bottom: 1px solid ${GlassBorder};
   
   &:last-child {
@@ -327,67 +282,208 @@ const DataRow = styled.div`
 `;
 
 const DataLabel = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   color: ${TextSecondary};
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  
+  svg {
+    fill: ${TextSecondary};
+  }
 `;
 
-const DataValue = styled.span`
-  color: ${TextPrimary};
-  font-size: 1rem;
+const DataValue = styled.span<{ $color: string }>`
+  color: ${props => props.$color};
+  font-size: 1.1rem;
   font-weight: 600;
   font-family: 'Courier New', monospace;
 `;
 
-const CardFooter = styled.div`
-  background: ${GlassHighlight};
-  padding: 1rem 2rem;
-  color: ${TextSecondary};
-  font-size: 0.8rem;
-  text-align: center;
-  border-top: 2px solid ${GlassBorder};
-`;
-
-const InstructionsCard = styled.div`
-  position: absolute;
-  bottom: 2rem;
-  left: 2rem;
-  background: ${GlassBg};
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 1.5rem 2rem;
-  border-radius: 12px;
-  border: 2px solid ${GlassBorder};
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-  min-width: 240px;
-  
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
-
-const CardTitle = styled.h3`
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: ${TextPrimary};
-  margin: 0 0 1rem 0;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
+const CoordinatesGroup = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 `;
 
 const InstructionItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   color: ${TextSecondary};
-  font-size: 0.85rem;
-  margin: 0.65rem 0;
+  font-size: 0.9rem;
+  margin: 1rem 0;
   font-weight: 400;
 `;
 
-const Icon = styled.span`
+const IconBadge = styled.div<{ $color: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: ${props => `${props.$color}20`};
+  border: 2px solid ${props => `${props.$color}40`};
+  flex-shrink: 0;
+  
+  svg {
+    fill: ${props => props.$color};
+  }
+`;
+
+const LocationTitle = styled.h3`
+  font-size: 1.2rem;
+  color: ${TextPrimary};
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+`;
+
+const LocationDescription = styled.p`
+  font-size: 0.95rem;
+  color: ${TextSecondary};
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+`;
+
+const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid ${GlassBorder};
+  margin: 1.5rem 0;
+`;
+
+const PlaySection = styled.div`
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const PlayButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1.5rem 2rem;
+  background: ${getAccentByIndex(0)};
+  border: 2px solid ${getAccentByIndex(0)};
+  border-radius: 12px;
+  color: ${TextPrimary};
   font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px ${getAccentByIndex(0)}40;
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const PlayIcon = styled.div`
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+`;
+
+const StopButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1.5rem 2rem;
+  background: ${GlassHighlight};
+  border: 2px solid ${getAccentByIndex(0)};
+  border-radius: 12px;
+  color: ${TextPrimary};
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${getAccentByIndex(0)}20;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
+const StopIcon = styled.div`
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+`;
+
+const LiveStreamIndicator = styled.div`
+  background: ${GlassHighlight};
+  border: 2px solid ${GlassBorder};
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+`;
+
+const LiveWaveAnimation = styled.div<{ $color: string }>`
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 28px;
+`;
+
+const WaveBar = styled.div`
+  width: 3px;
+  height: 100%;
+  background: ${getAccentByIndex(0)};
+  border-radius: 2px;
+  animation: wave 1s ease-in-out infinite;
+  
+  @keyframes wave {
+    0%, 100% {
+      height: 20%;
+    }
+    50% {
+      height: 100%;
+    }
+  }
+`;
+
+const PlaybackLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+  color: ${TextPrimary};
+  font-weight: 600;
+  font-size: 0.95rem;
+`;
+
+const LiveIndicator = styled.div<{ $color: string }>`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: ${props => props.$color};
+  animation: pulse 1.5s ease-in-out infinite;
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.1);
+    }
+  }
 `;
