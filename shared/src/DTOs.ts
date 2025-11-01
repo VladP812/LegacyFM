@@ -1,17 +1,14 @@
 import z from "zod";
 
-// backend returns this, this could be any object like user : {id: z.number(), username: z.string()}
-const TestSchema = z.object({
-    message: z.string()
-}).strict();
-
-// backend uses this in it's endpoints' definitions - if the incoming request doesn't follow the schema, it's automatically rejected.
-export const TestRequest = z.object({
-    stringg: z.string("Value must be a string").min(1),
-    numberr: z.number("Value must be a number")
-}).strict();
-
-
-// types for the frontend, essentially DTOs' definitions - they match whatever they're inferred from.
-export type TestRequestType = z.infer<typeof TestRequest>;
-export type TestResponseType = z.infer<typeof TestSchema>;
+const RadioStationSchema = z.object({
+    id: z.number(),
+    name: z.string().min(1),
+    country: z.string().min(1),
+    city: z.string().min(1),
+    description: z.string().min(1),
+    lat: z.number(),
+    lon: z.number()
+});
+export const GetStationsResponse = z.array(RadioStationSchema);
+export type RadioStationType = z.infer<typeof RadioStationSchema>;
+export type GetStationsResponseType = z.infer<typeof GetStationsResponse>;
