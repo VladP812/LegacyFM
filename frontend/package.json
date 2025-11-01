@@ -10,10 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.6",
+    "@react-three/fiber": "^9.4.0",
     "axios": "^1.13.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.4",
+    "styled-components": "^6.1.19",
+    "three": "^0.181.0",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
