@@ -7,7 +7,7 @@ import GlobeComponent, { type LocationPoint } from '../components/Globe';
 import Card, { CardHeader, CardTitle, CardBody } from '../components/core/Card';
 import { TextPrimary, TextSecondary, GlassBorder, GlassHighlight } from '../assets/COLOURS';
 import { getAccentByIndex } from '../utils/colourUtils';
-import type { TestRequestType, TestResponseType } from "@shared/DTOs";
+//import type { TestRequestType, TestResponseType } from "@shared/DTOs";
 
 import Globe2Icon from '../assets/icons/globe-2.svg?react';
 import LocationPinIcon from '../assets/icons/location-pin.svg?react';
@@ -49,16 +49,16 @@ export default function Home() {
     }
   };
 
-  const handleSend = async (body: TestRequestType) => {
-    try {
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/test`, body);
-      const data: TestResponseType = res.data;
-      setResponse(data.message);
-    }
-    catch (e: any) {
-      setResponse(e.response?.status + e.message);
-    }
-  };
+ // const handleSend = async (body: TestRequestType) => {
+ //   try {
+ //     const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/test`, body);
+ //     const data: TestResponseType = res.data;
+ //     setResponse(data.message);
+ //   }
+ //   catch (e: any) {
+ //     setResponse(e.response?.status + e.message);
+ //   }
+ // };
 
   return (
     <PageContainer>
