@@ -18,8 +18,9 @@ import StarIcon from '../assets/icons/star.svg?react';
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<LocationPoint | null>(null);
   const [playingLocation, setPlayingLocation] = useState<LocationPoint | null>(null);
-  const [response, setResponse] = useState<GetStationsResponseType | null>(null);
+  const [stations, setStations] = useState<LocationPoint[]>([]);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const handleLocationClick = (location: LocationPoint) => {
     setSelectedLocation(location);
@@ -51,13 +52,27 @@ export default function Home() {
 
   const handleSend = async () => {
     try {
+      setIsLoading(true);
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/stations`);
       const data: GetStationsResponseType = res.data;
       console.log(data);
-      setResponse(data);
+      
+      const transformedStations: LocationPoint[] = data.map((station, index) => ({
+        id: station.id.toString(),
+        name: station.name,
+        locationName: `${station.city}, ${station.country}`,
+        description: station.description,
+        lat: station.lat,
+        lon: station.lon,
+        color: getAccentByIndex(index)
+      }));
+      
+      setStations(transformedStations);
+      setIsLoading(false);
     }
     catch (e: any) {
-      setResponse(e.response?.status + e.message);
+      console.error('Error fetching stations:', e);
+      setIsLoading(false);
     }
   };
 
@@ -69,6 +84,7 @@ export default function Home() {
     <PageContainer>
       <GlobeSection>
         <GlobeComponent 
+          locations={stations}
           onLocationClick={handleLocationClick}
           selectedLocation={selectedLocation}
         />
