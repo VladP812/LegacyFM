@@ -17,6 +17,7 @@ import StarIcon from '../assets/icons/star.svg?react';
 
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<LocationPoint | null>(null);
+  const [playingLocation, setPlayingLocation] = useState<LocationPoint | null>(null);
   const [response, setResponse] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
@@ -27,17 +28,25 @@ export default function Home() {
 
   const handleClosePanel = () => {
     setSelectedLocation(null);
-    setIsPlaying(false);
+    // Keep playing - don't stop playback
   };
 
   const handlePlay = () => {
     alert('Play event triggered! Starting playback...');
     setIsPlaying(true);
+    setPlayingLocation(selectedLocation);
   };
 
   const handleStop = () => {
     alert('Stop event triggered! Stopping playback...');
     setIsPlaying(false);
+    setPlayingLocation(null);
+  };
+
+  const handleMiniPlayerClick = () => {
+    if (playingLocation) {
+      setSelectedLocation(playingLocation);
+    }
   };
 
   const handleSend = async (body: TestRequestType) => {
@@ -84,7 +93,7 @@ export default function Home() {
             <CloseButton onClick={handleClosePanel}>×</CloseButton>
           </CardHeader>
           <CardBody>
-            <LocationTitle>{selectedLocation.locationName}</LocationTitle>
+            <LocationTitle>Location: {selectedLocation.locationName}</LocationTitle>
             <LocationDescription>{selectedLocation.description}</LocationDescription>
             
             <Divider />
@@ -110,12 +119,7 @@ export default function Home() {
             <Divider />
             
             <PlaySection>
-              {!isPlaying ? (
-                <PlayButton onClick={handlePlay}>
-                  <PlayIcon>▶</PlayIcon>
-                  <span>Listen to Station</span>
-                </PlayButton>
-              ) : (
+              {isPlaying && playingLocation?.id === selectedLocation.id ? (
                 <>
                   <StopButton onClick={handleStop}>
                     <StopIcon>■</StopIcon>
@@ -135,6 +139,11 @@ export default function Home() {
                     </PlaybackLabel>
                   </LiveStreamIndicator>
                 </>
+              ) : (
+                <PlayButton onClick={handlePlay}>
+                  <PlayIcon>▶</PlayIcon>
+                  <span>Listen to Station</span>
+                </PlayButton>
               )}
             </PlaySection>
           </CardBody>
@@ -162,6 +171,33 @@ export default function Home() {
           <span>Click markers for details</span>
         </InstructionItem>
       </Card>
+
+      {/* Mini Player - shown when playing but not selected */}
+      {isPlaying && playingLocation && playingLocation.id !== selectedLocation?.id && (
+        <Card position="bottom-right" minWidth="320px">
+          <MiniPlayerContainer onClick={handleMiniPlayerClick}>
+            <MiniPlayerHeader>
+              <IconWrapper $color={playingLocation.color || getAccentByIndex(0)}>
+                <LocationPinIcon width={24} height={24} />
+              </IconWrapper>
+              <MiniPlayerTitle>{playingLocation.name},</MiniPlayerTitle><MiniPlayerSubtitle>{playingLocation.locationName}</MiniPlayerSubtitle>
+            </MiniPlayerHeader>
+            <LiveStreamIndicator>
+              <LiveWaveAnimation $color={playingLocation.color || getAccentByIndex(0)}>
+                <WaveBar style={{ animationDelay: '0s' }} />
+                <WaveBar style={{ animationDelay: '0.1s' }} />
+                <WaveBar style={{ animationDelay: '0.2s' }} />
+                <WaveBar style={{ animationDelay: '0.3s' }} />
+                <WaveBar style={{ animationDelay: '0.4s' }} />
+              </LiveWaveAnimation>
+              <PlaybackLabel>
+                <LiveIndicator $color={playingLocation.color || getAccentByIndex(0)} />
+                Streaming Live
+              </PlaybackLabel>
+            </LiveStreamIndicator>
+          </MiniPlayerContainer>
+        </Card>
+      )}
     </PageContainer>
   );
 }
@@ -486,4 +522,40 @@ const LiveIndicator = styled.div<{ $color: string }>`
       transform: scale(1.1);
     }
   }
+`;
+
+const MiniPlayerContainer = styled.div`
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const MiniPlayerHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+`;
+
+const MiniPlayerTitle = styled.p`
+  font-size: 1.1rem;
+  color: ${TextPrimary};
+  margin: 0;
+  font-weight: 600;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+`;
+
+const MiniPlayerSubtitle = styled.p`
+  font-size: 0.9rem;
+  color: ${TextSecondary};
+  margin: 0;
+  font-weight: 600;
+  font-family: 'Segoe UI', system-ui, sans-serif;
 `;

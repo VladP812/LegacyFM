@@ -219,16 +219,16 @@ const GlobeComponent: React.FC<GlobeComponentProps> = ({
   selectedLocation = null 
 }) => {
   const defaultLocations: LocationPoint[] = [
-    { id: '1', name: 'New York', locationName: 'New York, USA', description: 'The Big Apple', lat: 40.7128, lon: -74.006, color: getAccentByIndex(0) },
-    { id: '2', name: 'London', locationName: 'London, UK', description: 'Historic British capital', lat: 51.5074, lon: -0.1278, color: getAccentByIndex(1) },
-    { id: '3', name: 'Tokyo', locationName: 'Tokyo, Japan', description: 'Modern metropolis', lat: 35.6762, lon: 139.6503, color: getAccentByIndex(2) },
-    { id: '4', name: 'Sydney', locationName: 'Sydney, Australia', description: 'Harbor city', lat: -33.8688, lon: 151.2093, color: getAccentByIndex(3) },
-    { id: '5', name: 'Paris', locationName: 'Paris, France', description: 'City of Light', lat: 48.8566, lon: 2.3522, color: getAccentByIndex(4) },
-    { id: '6', name: 'Rio de Janeiro', locationName: 'Rio de Janeiro, Brazil', description: 'Carnival city', lat: -22.9068, lon: -43.1729, color: getAccentByIndex(5) },
-    { id: '7', name: 'Dubai', locationName: 'Dubai, UAE', description: 'Desert oasis', lat: 25.2048, lon: 55.2708, color: getAccentByIndex(6) },
-    { id: '8', name: 'Singapore', locationName: 'Singapore', description: 'Garden city', lat: 1.3521, lon: 103.8198, color: getAccentByIndex(0) },
-    { id: '9', name: 'Moscow', locationName: 'Moscow, Russia', description: 'Red Square', lat: 55.7558, lon: 37.6173, color: getAccentByIndex(1) },
-    { id: '10', name: 'Cape Town', locationName: 'Cape Town, South Africa', description: 'Table Mountain', lat: -33.9249, lon: 18.4241, color: getAccentByIndex(2) },
+    { id: '1', name: 'A', locationName: 'New York, USA', description: 'The Big Apple', lat: 40.7128, lon: -74.006, color: getAccentByIndex(0) },
+    { id: '2', name: 'B', locationName: 'London, UK', description: 'Historic British capital', lat: 51.5074, lon: -0.1278, color: getAccentByIndex(1) },
+    { id: '3', name: 'C', locationName: 'Tokyo, Japan', description: 'Modern metropolis', lat: 35.6762, lon: 139.6503, color: getAccentByIndex(2) },
+    { id: '4', name: 'D', locationName: 'Sydney, Australia', description: 'Harbor city', lat: -33.8688, lon: 151.2093, color: getAccentByIndex(3) },
+    { id: '5', name: 'E', locationName: 'Paris, France', description: 'City of Light', lat: 48.8566, lon: 2.3522, color: getAccentByIndex(4) },
+    { id: '6', name: 'F', locationName: 'Rio de Janeiro, Brazil', description: 'Carnival city', lat: -22.9068, lon: -43.1729, color: getAccentByIndex(5) },
+    { id: '7', name: 'G', locationName: 'Dubai, UAE', description: 'Desert oasis', lat: 25.2048, lon: 55.2708, color: getAccentByIndex(6) },
+    { id: '8', name: 'H', locationName: 'Singapore', description: 'Garden city', lat: 1.3521, lon: 103.8198, color: getAccentByIndex(0) },
+    { id: '9', name: 'I', locationName: 'Moscow, Russia', description: 'Red Square', lat: 55.7558, lon: 37.6173, color: getAccentByIndex(1) },
+    { id: '10', name: 'J', locationName: 'Cape Town, South Africa', description: 'Table Mountain', lat: -33.9249, lon: 18.4241, color: getAccentByIndex(2) },
   ];
 
   const pointsToRender = locations.length > 0 ? locations : defaultLocations;
