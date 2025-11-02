@@ -9,6 +9,11 @@ const RadioStationSchema = z.object({
     lat: z.number(),
     lon: z.number()
 }).strict();
+
+export const CountrySearchResponse = z.object({
+    prompt: z.string()
+}).strict();
+
 export const GetStationsResponse = z.array(RadioStationSchema);
 export type RadioStationType = z.infer<typeof RadioStationSchema>;
 export type GetStationsResponseType = z.infer<typeof GetStationsResponse>;

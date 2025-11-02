@@ -6,6 +6,7 @@ import { loadEnvFile } from "process";
 import path from "path";
 import db from "./plugins/db";
 import { radioStationRoutes } from "./modules/radio_stations/radio_station_routes";
+import { searchRoutes } from "./modules/radio_stations/search";
 
 const envPath = path.join(__dirname, "../.env.development");
 loadEnvFile(envPath);
@@ -38,5 +39,6 @@ fastify.setErrorHandler((err, req, reply) => {
 // database
 fastify.register(db);
 fastify.register(radioStationRoutes);
+fastify.register(searchRoutes)
 
 fastify.listen({port: 11337});
