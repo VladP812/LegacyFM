@@ -1,12 +1,15 @@
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors"
-import { hasZodFastifySchemaValidationErrors, serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 
 import { loadEnvFile } from "process";
+
 import path from "path";
 import db from "./plugins/db";
+import { cacheInitialAudio } from "./scripts/bootstrap"
 import { radioStationRoutes } from "./modules/radio_stations/radio_station_routes";
 import { searchRoutes } from "./modules/radio_stations/search";
+import redis from "./plugins/redis";
 
 const envPath = path.join(__dirname, "../.env.development");
 loadEnvFile(envPath);
@@ -38,7 +41,13 @@ fastify.setErrorHandler((err, req, reply) => {
 
 // database
 fastify.register(db);
+fastify.register(redis);
+// routes
 fastify.register(radioStationRoutes);
 fastify.register(searchRoutes)
+
+fastify.ready().then(async () => {
+    await cacheInitialAudio(fastify);
+});
 
 fastify.listen({port: 11337});
