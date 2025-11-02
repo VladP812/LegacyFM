@@ -104,91 +104,52 @@ export default function Home() {
   };
 
   const handlePlay = () => {
-    if (!selectedLocation) return;
-    
-    // Stop any currently playing audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.removeEventListener('play', () => {});
-      audioRef.current.removeEventListener('error', () => {});
-      audioRef.current.src = '';
-    }
-    
-    // Create new audio element with the selected station
-    const audio = new Audio(`${import.meta.env.VITE_BACKEND_URL}/radio?id=${selectedLocation.id}`);
-    audio.autoplay = true;
-    audioRef.current = audio;
-    
-    // Handle playback events
-    const handlePlayEvent = () => {
-      setIsPlaying(true);
-      setPlayingLocation(selectedLocation);
-      
-      // Start message subscription when playing starts (only if chat enabled)
-      if (isChatEnabled && conversationRef.current) {
-        let isFirstLoad = true;
-        
-        conversationRef.current.subscribeMessages((messages) => {
-          // Only process new messages we haven't seen
-          if (messages && messages.length > 0) {
-            // On first load, mark all existing messages as seen without displaying them
-            if (isFirstLoad) {
-              messages.forEach((msg: any) => {
-                seenMessageIds.current.add(msg.id);
-              });
-              isFirstLoad = false;
-              return;
-            }
-            
-            messages.forEach((msg: any) => {
-              if (seenMessageIds.current.has(msg.id)) return;
-              
-              seenMessageIds.current.add(msg.id);
-              
-              const senderLat = parseFloat(msg.custom?.lat || selectedLocation.lat);
-              const senderLon = parseFloat(msg.custom?.lon || selectedLocation.lon);
-              
-              const newChatMessage: ChatMessage = {
-                id: msg.id,
-                text: msg.plaintext || '',
-                lat: senderLat,
-                lon: senderLon,
-                timestamp: Date.now(),
-                color: selectedLocation.color || getAccentByIndex(0)
-              };
-              
-              setChatMessages(prev => [...prev, newChatMessage]);
-              
-              setTimeout(() => {
-                setChatMessages(prev => prev.filter(chatMsg => chatMsg.id !== msg.id));
-              }, 5000);
-            });
+      if (!selectedLocation) return;
+
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeEventListener('play', () => {});
+        audioRef.current.removeEventListener('error', () => {});
+        audioRef.current.removeEventListener('ended', () => {}); // remove old ended listener
+        audioRef.current.src = '';
+      }
+
+      const createAudio = () => {
+        const audio = new Audio(`${import.meta.env.VITE_BACKEND_URL}/radio?id=${selectedLocation.id}`);
+        audio.autoplay = true;
+        audioRef.current = audio;
+
+        // Event listeners
+        audio.addEventListener('play', () => {
+          setIsPlaying(true);
+          setPlayingLocation(selectedLocation);
+        });
+
+        audio.addEventListener('error', (e) => {
+          console.error('Audio playback error:', e);
+          if (audioRef.current === audio) {
+            setIsPlaying(false);
+            setPlayingLocation(null);
           }
         });
-      }
+
+        // Re-open stream on end
+        audio.addEventListener('ended', () => {
+          createAudio(); // re-create the audio element to restart the stream
+        });
+
+        audio.play().catch(err => {
+          console.error('Play failed:', err);
+          if (audioRef.current === audio) {
+            setIsPlaying(false);
+            setPlayingLocation(null);
+          }
+        });
+      };
+
+      createAudio();
     };
-    
-    const handleErrorEvent = (e: Event) => {
-      console.error('Audio playback error:', e);
-      // Only show error if we're still trying to play this audio
-      if (audioRef.current === audio) {
-        setIsPlaying(false);
-        setPlayingLocation(null);
-      }
-    };
-    
-    audio.addEventListener('play', handlePlayEvent);
-    audio.addEventListener('error', handleErrorEvent);
-    
-    // Start playing
-    audio.play().catch(err => {
-      console.error('Play failed:', err);
-      if (audioRef.current === audio) {
-        setIsPlaying(false);
-        setPlayingLocation(null);
-      }
-    });
-  };
 
   const handleStop = () => {
     if (audioRef.current) {

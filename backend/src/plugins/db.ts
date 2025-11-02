@@ -2,8 +2,6 @@ import { FastifyInstance } from "fastify";
 import fastifyPlugin from "fastify-plugin";
 import { Pool } from 'pg';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { radio_stations } from "../schemas";
-import { populateDbWithRadioStations } from "../scripts/populateDbWithInitialData";
 
 // extend module interface for proper typing
 declare module 'fastify' {
@@ -21,11 +19,6 @@ async function dbPlugin(fastify: FastifyInstance, options: Object) {
         database: process.env.DB_DATABASE,
     });
     const db: NodePgDatabase = drizzle(pool);
-
-    const stations = await db.select().from(radio_stations)
-    if (stations.length < 1) {
-        await populateDbWithRadioStations(db);
-    }
 
     fastify.decorate("db", db);
 }
