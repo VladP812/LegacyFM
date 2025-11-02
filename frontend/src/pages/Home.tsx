@@ -14,6 +14,7 @@ import LocationPinIcon from '../assets/icons/location-pin.svg?react';
 import CompassIcon from '../assets/icons/compass.svg?react';
 import MapIcon from '../assets/icons/map.svg?react';
 import StarIcon from '../assets/icons/star.svg?react';
+import MagnifyingGlassIcon from '../assets/icons/magnifying-glass.svg?react';
 
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<LocationPoint | null>(null);
@@ -21,6 +22,8 @@ export default function Home() {
   const [stations, setStations] = useState<LocationPoint[]>([]);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearchMode, setIsSearchMode] = useState<boolean>(false);
 
   const handleLocationClick = (location: LocationPoint) => {
     setSelectedLocation(location);
@@ -76,6 +79,40 @@ export default function Home() {
     }
   };
 
+  const handleSearchSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/search?prompt=${encodeURIComponent(searchQuery)}`);
+      console.log('Search response:', res.data);
+      const stationId = res.data.toString();
+      
+      // Check if search failed
+      if (stationId === '-1') {
+        console.warn('Search failed - no station found');
+        alert('No station found matching your search');
+        return;
+      }
+      
+      // Find the station with this ID
+      const foundStation = stations.find(station => station.id === stationId);
+      
+      if (foundStation) {
+        // Emulate user clicking on the location
+        handleLocationClick(foundStation);
+        setSearchQuery('');
+        setIsSearchMode(false);
+      } else {
+        console.warn(`Station with id ${stationId} not found in local data`);
+        alert('Station not found in current data');
+      }
+    } catch (e: any) {
+      console.error('Error searching:', e);
+      alert('Search failed - please try again');
+    }
+  };
+
   useEffect(() => {
       handleSend();
   }, []);
@@ -91,15 +128,41 @@ export default function Home() {
       </GlobeSection>
 
       <Card position="top-left" minWidth="280px">
-        <HeaderContainer>
-          <IconWrapper $color={getAccentByIndex(0)}>
-            <Globe2Icon width={40} height={40} />
-          </IconWrapper>
-          <div>
-            <HeaderTitle>Legacy FM</HeaderTitle>
-            <HeaderSubtitle>Discover dying traditions, cultures, and stories</HeaderSubtitle>
-          </div>
-        </HeaderContainer>
+        {!isSearchMode ? (
+          <HeaderContainer>
+            <IconWrapper $color={getAccentByIndex(0)}>
+              <Globe2Icon width={40} height={40} />
+            </IconWrapper>
+            <div style={{ flex: 1 }}>
+              <HeaderTitle>Legacy FM</HeaderTitle>
+              <HeaderSubtitle>Discover dying traditions, cultures, and stories</HeaderSubtitle>
+            </div>
+            <SearchToggleButton onClick={() => setIsSearchMode(true)}>
+              <MagnifyingGlassIcon width={64} height={64} />
+            </SearchToggleButton>
+          </HeaderContainer>
+        ) : (
+          <SearchContainer>
+            <IconWrapper $color={getAccentByIndex(3)}>
+              <MagnifyingGlassIcon width={40} height={40} />
+            </IconWrapper>
+            <SearchFormContainer onSubmit={handleSearchSubmit}>
+              <SearchInput
+                type="text"
+                placeholder="Search stations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
+              />
+              <SearchSubmitButton type="submit">
+                Search
+              </SearchSubmitButton>
+            </SearchFormContainer>
+            <CloseSearchButton onClick={() => { setIsSearchMode(false); setSearchQuery(''); }}>
+              ×
+            </CloseSearchButton>
+          </SearchContainer>
+        )}
       </Card>
 
       {selectedLocation && (
@@ -136,8 +199,6 @@ export default function Home() {
               </DataLabel>
               <DataValue $color={getAccentByIndex(4)}>#{selectedLocation.id}</DataValue>
             </DataRow>
-            
-            <Divider />
             
             <PlaySection>
               {isPlaying && playingLocation?.id === selectedLocation.id ? (
@@ -579,4 +640,118 @@ const MiniPlayerSubtitle = styled.p`
   margin: 0;
   font-weight: 600;
   font-family: 'Segoe UI', system-ui, sans-serif;
+`;
+
+const SearchToggleButton = styled.button`
+  background: transparent;
+  color: ${TextPrimary};
+  border: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  svg {
+    fill: ${getAccentByIndex(3)};
+    transition: all 0.2s ease;
+  }
+  
+  &:hover {    
+    svg {
+      fill: ${getAccentByIndex(0)};
+      transform: scale(1.1);
+    }
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+const SearchContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 56px;
+`;
+
+const SearchFormContainer = styled.form`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+`;
+
+const SearchInput = styled.input`
+  background: transparent;
+  border: none;
+  color: ${TextPrimary};
+  font-size: 1rem;
+  padding: 0.5rem 0;
+  outline: none;
+  flex: 1;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  
+  &::placeholder {
+    color: ${TextSecondary};
+  }
+`;
+
+const SearchSubmitButton = styled.button`
+  background: ${getAccentByIndex(3)};
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  color: #1a1a2e;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  
+  &:hover {
+    transform: translateY(-1px);
+    background: ${getAccentByIndex(0)};
+    color: ${TextPrimary};
+    box-shadow: 0 4px 12px ${getAccentByIndex(3)}40;
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const CloseSearchButton = styled.button`
+  background: ${GlassHighlight};
+  border: 2px solid ${GlassBorder};
+  color: ${TextSecondary};
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.8rem;
+  font-weight: 300;
+  padding: 20px;
+  flex-shrink: 0;
+  line-height: 0.8;
+  font-family: Arial, sans-serif;
+
+  &:hover {
+    background: ${getAccentByIndex(0)};
+    border-color: ${getAccentByIndex(0)};
+    color: ${TextPrimary};
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
 `;
