@@ -103,18 +103,23 @@ export default function Home() {
       setIsLoading(true);
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/stations`);
       const data: GetStationsResponseType = res.data;
-      console.log(data);
+      console.log('API Response:', data);
+      console.log('Number of stations:', data.length);
       
-      const transformedStations: LocationPoint[] = data.map((station, index) => ({
-        id: station.id.toString(),
-        name: station.name,
-        locationName: `${station.city}, ${station.country}`,
-        description: station.description,
-        lat: station.lat,
-        lon: station.lon,
-        color: getAccentByIndex(index)
-      }));
+      const transformedStations: LocationPoint[] = data.map((station, index) => {
+        console.log('Transforming station:', station);
+        return {
+          id: station.id.toString(),
+          name: station.name,
+          locationName: `${station.city}, ${station.country}`,
+          description: station.description,
+          lat: station.lat,
+          lon: station.lon,
+          color: getAccentByIndex(index)
+        };
+      });
       
+      console.log('Transformed stations:', transformedStations);
       setStations(transformedStations);
       setIsLoading(false);
     }
@@ -197,26 +202,59 @@ export default function Home() {
             </SearchToggleButton>
           </HeaderContainer>
         ) : (
-          <SearchContainer>
-            <IconWrapper $color={getAccentByIndex(3)}>
-              <MagnifyingGlassIcon width={40} height={40} />
-            </IconWrapper>
-            <SearchFormContainer onSubmit={handleSearchSubmit}>
-              <SearchInput
-                type="text"
-                placeholder="Search stations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoFocus
-              />
-              <SearchSubmitButton type="submit">
-                Search
-              </SearchSubmitButton>
-            </SearchFormContainer>
-            <CloseSearchButton onClick={() => { setIsSearchMode(false); setSearchQuery(''); }}>
-              ×
-            </CloseSearchButton>
-          </SearchContainer>
+          <SearchExpandedContainer>
+            <SearchContainer>
+              <IconWrapper $color={getAccentByIndex(3)}>
+                <MagnifyingGlassIcon width={40} height={40} />
+              </IconWrapper>
+              <SearchFormContainer onSubmit={handleSearchSubmit}>
+                <SearchInput
+                  type="text"
+                  placeholder="Search with AI ✨"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                />
+                <SearchSubmitButton type="submit">
+                  Search
+                </SearchSubmitButton>
+              </SearchFormContainer>
+              <CloseSearchButton onClick={() => { setIsSearchMode(false); setSearchQuery(''); }}>
+                ×
+              </CloseSearchButton>
+            </SearchContainer>
+            
+            <StationListContainer>
+              <StationListHeader>All Stations ({stations.length})</StationListHeader>
+              <StationList>
+                {isLoading ? (
+                  <LoadingMessage>Loading stations...</LoadingMessage>
+                ) : stations.length === 0 ? (
+                  <EmptyMessage>No stations available</EmptyMessage>
+                ) : (
+                  stations.map((station, index) => (
+                    <StationItem
+                      key={station.id}
+                      onClick={() => {
+                        handleLocationClick(station);
+                        setIsSearchMode(false);
+                        setSearchQuery('');
+                      }}
+                      $isSelected={selectedLocation?.id === station.id}
+                    >
+                      <IconWrapper $color={station.color || getAccentByIndex(index)}>
+                        <LocationPinIcon width={20} height={20} />
+                      </IconWrapper>
+                      <StationInfo>
+                        <StationName>{station.name}</StationName>
+                        <StationLocation>{station.locationName}</StationLocation>
+                      </StationInfo>
+                    </StationItem>
+                  ))
+                )}
+              </StationList>
+            </StationListContainer>
+          </SearchExpandedContainer>
         )}
       </Card>
 
@@ -728,11 +766,17 @@ const SearchToggleButton = styled.button`
   }
 `;
 
+const SearchExpandedContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
 const SearchContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-  height: 56px;
+  height: 38px;
 `;
 
 const SearchFormContainer = styled.form`
@@ -740,6 +784,110 @@ const SearchFormContainer = styled.form`
   align-items: center;
   gap: 0.75rem;
   flex: 1;
+`;
+
+const StationListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const StationListHeader = styled.h3`
+  font-size: 0.9rem;
+  color: ${TextSecondary};
+  margin: 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const StationList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${GlassHighlight};
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: ${GlassBorder};
+    border-radius: 3px;
+    
+    &:hover {
+      background: ${getAccentByIndex(3)};
+    }
+  }
+`;
+
+const StationItem = styled.div<{ $isSelected: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: ${props => props.$isSelected ? `${getAccentByIndex(0)}20` : GlassHighlight};
+  border: 2px solid ${props => props.$isSelected ? getAccentByIndex(0) : GlassBorder};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${props => props.$isSelected ? `${getAccentByIndex(0)}30` : `${getAccentByIndex(3)}15`};
+    border-color: ${props => props.$isSelected ? getAccentByIndex(0) : getAccentByIndex(3)};
+    transform: translateX(4px);
+  }
+  
+  &:active {
+    transform: translateX(2px);
+  }
+`;
+
+const StationInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+`;
+
+const StationName = styled.div`
+  font-size: 1rem;
+  color: ${TextPrimary};
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const StationLocation = styled.div`
+  font-size: 0.85rem;
+  color: ${TextSecondary};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: ${TextSecondary};
+  font-size: 0.95rem;
+`;
+
+const EmptyMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: ${TextSecondary};
+  font-size: 0.95rem;
 `;
 
 const SearchInput = styled.input`

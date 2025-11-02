@@ -54,106 +54,106 @@ export async function populateDbWithRadioStations(db: NodePgDatabase) {
             description: 'North Sea Whispers presents spoken recollections of Faroese seafarers, farmers, and storytellers. Episodes discuss maritime survival, family traditions, and the moral lessons once passed down by word of mouth. It offers an intimate perspective on life in a remote North Atlantic culture.',
             voiceId: "8Ln42OXYupYsag45MAUy"
         },
-        {
-            id: 6,
-            city: 'Nuuk',
-            name: 'Arctic Voices Radio',
-            lat: 64.1835,
-            lon: -51.7216,
-            country: 'Greenland',
-            description: 'Arctic Voices Radio archives spoken accounts of Inuit history, migration, and environmental adaptation. Conversations with elders reveal ancestral explanations of ice, wind, and seasons. The focus is entirely on narrative memory, ensuring that ancient understandings of the Arctic remain accessible to future generations.',
-            voiceId: "EXAVITQu4vr4xnSDxMaL"
-        },
-        {
-            id: 7,
-            city: 'Pohnpei',
-            name: 'Echoes of Nan Madol',
-            lat: 6.8580,
-            lon: 158.2080,
-            country: 'Micronesia',
-            description: 'Echoes of Nan Madol features storytelling sessions and recorded interviews about the myths surrounding Micronesia’s mysterious stone city. Elders explain the moral and historical lessons within these narratives. The programs emphasize language preservation and the philosophical depth of Pacific oral history.',
-            voiceId: "SAz9YHcvj6GT2YYXdXww"
-        },
-        {
-            id: 8,
-            city: 'Bamiyan',
-            name: 'Valley of Light Radio',
-            lat: 34.8216,
-            lon: 67.8273,
-            country: 'Afghanistan',
-            description: 'Valley of Light Radio documents spoken recollections from Hazara communities in central Afghanistan. The broadcasts feature interviews about family histories, folk wisdom, and community resilience. By relying solely on speech, it restores attention to a people whose voices were often excluded from written history.',
-            voiceId: "cgSgspJ2msm6clMCkdW9"
-        },
-        {
-            id: 9,
-            city: 'Mérida',
-            name: 'Maya Resonance FM',
-            lat: 20.9674,
-            lon: -89.5926,
-            country: 'Mexico',
-            description: 'Maya Resonance FM preserves spoken knowledge of cosmology, agriculture, and oral teaching among Yucatec Maya speakers. Storytellers explain seasonal ceremonies and traditional interpretations of the stars. The station uses conversation and narration to connect listeners with the worldview of precolonial America.',
-            voiceId: "XrExE9yKIg1WjnnlVkGX"
-        },
-        {
-            id: 10,
-            city: 'Tromsø',
-            name: 'Saami Soul Radio',
-            lat: 69.6492,
-            lon: 18.9553,
-            country: 'Norway',
-            description: 'Saami Soul Radio presents interviews and spoken reflections from reindeer herders and elders of the Saami people. It focuses on narratives about land, family, and the meaning of endurance in the far north. Each segment is a dialogue that keeps traditional knowledge alive through words alone.',
-            voiceId: "onwK4e9ZLuTAKqWW03F9"
-        },
-        {
-            id: 11,
-            city: 'Valparaíso',
-            name: 'Port of Forgotten Tongues',
-            lat: -33.0472,
-            lon: -71.6127,
-            country: 'Chile',
-            description: 'Port of Forgotten Tongues records conversations with descendants of the Chango and Kawésqar peoples of Chile’s coast. The broadcasts examine language revival and the stories that defined maritime identity. It’s a purely spoken archive aimed at cultural and linguistic preservation.',
-            voiceId: "pqHfZKP75CvOlQylNhV4"
-        },
-        {
-            id: 12,
-            city: 'Oaxaca',
-            name: 'Cloud People Radio',
-            lat: 17.0732,
-            lon: -96.7266,
-            country: 'Mexico',
-            description: 'Cloud People Radio hosts discussions and oral storytelling sessions with Zapotec and Mixtec elders. Listeners hear about ancestral governance, ecological balance, and moral instruction in community tales. The format avoids any performance elements, focusing entirely on conversation and narration.',
-            voiceId: "iP95p4xoKVk53GoZ742B"
-        },
-        {
-            id: 13,
-            city: 'Karasjok',
-            name: 'Spirit of the Tundra',
-            lat: 69.4719,
-            lon: 25.5113,
-            country: 'Norway',
-            description: 'Spirit of the Tundra shares spoken reflections on animistic beliefs and seasonal rituals among the Sámi. The programs feature dialogues between storytellers and younger generations learning to interpret traditional wisdom. The content is educational, introspective, and strictly narrative in nature.',
-            voiceId: "bIHbv24MWmeRgasZH58o"
-        },
-        {
-            id: 14,
-            city: 'Apia',
-            name: 'Ocean Memory FM',
-            lat: -13.8333,
-            lon: -171.7667,
-            country: 'Samoa',
-            description: 'Ocean Memory FM features oral interviews with Samoan elders who recount navigation traditions, kinship systems, and moral tales. The emphasis is on the words and meaning behind inherited stories rather than performance. It ensures that spoken wisdom continues to guide island communities.',
-            voiceId: "pFZP5JQG7iQjIQuC4Bku"
-        },
-        {
-            id: 15,
-            city: 'Ségou',
-            name: 'River Ancestors Radio',
-            lat: 13.4317,
-            lon: -6.2150,
-            country: 'Mali',
-            description: 'River Ancestors Radio captures firsthand oral accounts from Bozo fishing families along the Niger River. Speakers explain ancestral relationships with the river, seasonal changes, and intergenerational customs. The programs are documentary-style, composed entirely of interviews and narration.',
-            voiceId: "JBFqnCBsd6RMkjVDRZzb"
-        }
+        // {
+        //     id: 6,
+        //     city: 'Nuuk',
+        //     name: 'Arctic Voices Radio',
+        //     lat: 64.1835,
+        //     lon: -51.7216,
+        //     country: 'Greenland',
+        //     description: 'Arctic Voices Radio archives spoken accounts of Inuit history, migration, and environmental adaptation. Conversations with elders reveal ancestral explanations of ice, wind, and seasons. The focus is entirely on narrative memory, ensuring that ancient understandings of the Arctic remain accessible to future generations.',
+        //     voiceId: "EXAVITQu4vr4xnSDxMaL"
+        // },
+        // {
+        //     id: 7,
+        //     city: 'Pohnpei',
+        //     name: 'Echoes of Nan Madol',
+        //     lat: 6.8580,
+        //     lon: 158.2080,
+        //     country: 'Micronesia',
+        //     description: 'Echoes of Nan Madol features storytelling sessions and recorded interviews about the myths surrounding Micronesia’s mysterious stone city. Elders explain the moral and historical lessons within these narratives. The programs emphasize language preservation and the philosophical depth of Pacific oral history.',
+        //     voiceId: "SAz9YHcvj6GT2YYXdXww"
+        // },
+        // {
+        //     id: 8,
+        //     city: 'Bamiyan',
+        //     name: 'Valley of Light Radio',
+        //     lat: 34.8216,
+        //     lon: 67.8273,
+        //     country: 'Afghanistan',
+        //     description: 'Valley of Light Radio documents spoken recollections from Hazara communities in central Afghanistan. The broadcasts feature interviews about family histories, folk wisdom, and community resilience. By relying solely on speech, it restores attention to a people whose voices were often excluded from written history.',
+        //     voiceId: "cgSgspJ2msm6clMCkdW9"
+        // },
+        // {
+        //     id: 9,
+        //     city: 'Mérida',
+        //     name: 'Maya Resonance FM',
+        //     lat: 20.9674,
+        //     lon: -89.5926,
+        //     country: 'Mexico',
+        //     description: 'Maya Resonance FM preserves spoken knowledge of cosmology, agriculture, and oral teaching among Yucatec Maya speakers. Storytellers explain seasonal ceremonies and traditional interpretations of the stars. The station uses conversation and narration to connect listeners with the worldview of precolonial America.',
+        //     voiceId: "XrExE9yKIg1WjnnlVkGX"
+        // },
+        // {
+        //     id: 10,
+        //     city: 'Tromsø',
+        //     name: 'Saami Soul Radio',
+        //     lat: 69.6492,
+        //     lon: 18.9553,
+        //     country: 'Norway',
+        //     description: 'Saami Soul Radio presents interviews and spoken reflections from reindeer herders and elders of the Saami people. It focuses on narratives about land, family, and the meaning of endurance in the far north. Each segment is a dialogue that keeps traditional knowledge alive through words alone.',
+        //     voiceId: "onwK4e9ZLuTAKqWW03F9"
+        // },
+        // {
+        //     id: 11,
+        //     city: 'Valparaíso',
+        //     name: 'Port of Forgotten Tongues',
+        //     lat: -33.0472,
+        //     lon: -71.6127,
+        //     country: 'Chile',
+        //     description: 'Port of Forgotten Tongues records conversations with descendants of the Chango and Kawésqar peoples of Chile’s coast. The broadcasts examine language revival and the stories that defined maritime identity. It’s a purely spoken archive aimed at cultural and linguistic preservation.',
+        //     voiceId: "pqHfZKP75CvOlQylNhV4"
+        // },
+        // {
+        //     id: 12,
+        //     city: 'Oaxaca',
+        //     name: 'Cloud People Radio',
+        //     lat: 17.0732,
+        //     lon: -96.7266,
+        //     country: 'Mexico',
+        //     description: 'Cloud People Radio hosts discussions and oral storytelling sessions with Zapotec and Mixtec elders. Listeners hear about ancestral governance, ecological balance, and moral instruction in community tales. The format avoids any performance elements, focusing entirely on conversation and narration.',
+        //     voiceId: "iP95p4xoKVk53GoZ742B"
+        // },
+        // {
+        //     id: 13,
+        //     city: 'Karasjok',
+        //     name: 'Spirit of the Tundra',
+        //     lat: 69.4719,
+        //     lon: 25.5113,
+        //     country: 'Norway',
+        //     description: 'Spirit of the Tundra shares spoken reflections on animistic beliefs and seasonal rituals among the Sámi. The programs feature dialogues between storytellers and younger generations learning to interpret traditional wisdom. The content is educational, introspective, and strictly narrative in nature.',
+        //     voiceId: "bIHbv24MWmeRgasZH58o"
+        // },
+        // {
+        //     id: 14,
+        //     city: 'Apia',
+        //     name: 'Ocean Memory FM',
+        //     lat: -13.8333,
+        //     lon: -171.7667,
+        //     country: 'Samoa',
+        //     description: 'Ocean Memory FM features oral interviews with Samoan elders who recount navigation traditions, kinship systems, and moral tales. The emphasis is on the words and meaning behind inherited stories rather than performance. It ensures that spoken wisdom continues to guide island communities.',
+        //     voiceId: "pFZP5JQG7iQjIQuC4Bku"
+        // },
+        // {
+        //     id: 15,
+        //     city: 'Ségou',
+        //     name: 'River Ancestors Radio',
+        //     lat: 13.4317,
+        //     lon: -6.2150,
+        //     country: 'Mali',
+        //     description: 'River Ancestors Radio captures firsthand oral accounts from Bozo fishing families along the Niger River. Speakers explain ancestral relationships with the river, seasonal changes, and intergenerational customs. The programs are documentary-style, composed entirely of interviews and narration.',
+        //     voiceId: "JBFqnCBsd6RMkjVDRZzb"
+        // }
     ];
 
     for (const station of stations) {

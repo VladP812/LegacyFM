@@ -25,6 +25,8 @@ export async function generatePodcastSpeech(text: string, voiceId: string) : Pro
         text,
         modelId: "eleven_monolingual_v1",
         outputFormat: 'mp3_44100_32'
+        // modelId: "eleven_turbo_v2_5",
+        // outputFormat: 'mp3_44100_128'
     });
 
     const chunks: Buffer[] = [];
