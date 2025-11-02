@@ -36,48 +36,52 @@ export default function Home() {
   };
 
   const handlePlay = () => {
-    if (!selectedLocation) return;
-    
-    // Stop any currently playing audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.removeEventListener('play', () => {});
-      audioRef.current.removeEventListener('error', () => {});
-      audioRef.current.src = '';
-    }
-    
-    // Create new audio element with the selected station
-    const audio = new Audio(`${import.meta.env.VITE_BACKEND_URL}/radio?id=${selectedLocation.id}`);
-    audio.autoplay = true;
-    audioRef.current = audio;
-    
-    // Handle playback events
-    const handlePlayEvent = () => {
-      setIsPlaying(true);
-      setPlayingLocation(selectedLocation);
-    };
-    
-    const handleErrorEvent = (e: Event) => {
-      console.error('Audio playback error:', e);
-      // Only show error if we're still trying to play this audio
-      if (audioRef.current === audio) {
-        setIsPlaying(false);
-        setPlayingLocation(null);
+      if (!selectedLocation) return;
+
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeEventListener('play', () => {});
+        audioRef.current.removeEventListener('error', () => {});
+        audioRef.current.removeEventListener('ended', () => {}); // remove old ended listener
+        audioRef.current.src = '';
       }
+
+      const createAudio = () => {
+        const audio = new Audio(`${import.meta.env.VITE_BACKEND_URL}/radio?id=${selectedLocation.id}`);
+        audio.autoplay = true;
+        audioRef.current = audio;
+
+        // Event listeners
+        audio.addEventListener('play', () => {
+          setIsPlaying(true);
+          setPlayingLocation(selectedLocation);
+        });
+
+        audio.addEventListener('error', (e) => {
+          console.error('Audio playback error:', e);
+          if (audioRef.current === audio) {
+            setIsPlaying(false);
+            setPlayingLocation(null);
+          }
+        });
+
+        // Re-open stream on end
+        audio.addEventListener('ended', () => {
+          createAudio(); // re-create the audio element to restart the stream
+        });
+
+        audio.play().catch(err => {
+          console.error('Play failed:', err);
+          if (audioRef.current === audio) {
+            setIsPlaying(false);
+            setPlayingLocation(null);
+          }
+        });
+      };
+
+      createAudio();
     };
-    
-    audio.addEventListener('play', handlePlayEvent);
-    audio.addEventListener('error', handleErrorEvent);
-    
-    // Start playing
-    audio.play().catch(err => {
-      console.error('Play failed:', err);
-      if (audioRef.current === audio) {
-        setIsPlaying(false);
-        setPlayingLocation(null);
-      }
-    });
-  };
 
   const handleStop = () => {
     if (audioRef.current) {

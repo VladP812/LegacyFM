@@ -6,7 +6,7 @@ import { loadEnvFile } from "process";
 
 import path from "path";
 import db from "./plugins/db";
-import { cacheInitialAudio } from "./scripts/bootstrap"
+import { initEverythingXD } from "./scripts/bootstrap"
 import { radioStationRoutes } from "./modules/radio_stations/radio_station_routes";
 import { searchRoutes } from "./modules/radio_stations/search";
 import redis from "./plugins/redis";
@@ -46,8 +46,9 @@ fastify.register(redis);
 fastify.register(radioStationRoutes);
 fastify.register(searchRoutes)
 
+// populate database with radio stations, cache initial podcasts
 fastify.ready().then(async () => {
-    await cacheInitialAudio(fastify);
+    await initEverythingXD(fastify);
 });
 
 fastify.listen({port: 11337});
