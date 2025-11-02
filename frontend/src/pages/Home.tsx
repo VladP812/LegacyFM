@@ -24,6 +24,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchMode, setIsSearchMode] = useState<boolean>(false);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const handleLocationClick = (location: LocationPoint) => {
     setSelectedLocation(location);
@@ -32,17 +33,63 @@ export default function Home() {
 
   const handleClosePanel = () => {
     setSelectedLocation(null);
-    // Keep playing - don't stop playback
   };
 
   const handlePlay = () => {
-    alert('Play event triggered! Starting playback...');
-    setIsPlaying(true);
-    setPlayingLocation(selectedLocation);
+    if (!selectedLocation) return;
+    
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.removeEventListener('play', () => {});
+      audioRef.current.removeEventListener('error', () => {});
+      audioRef.current.src = '';
+    }
+    
+    // Create new audio element with the selected station
+    const audio = new Audio(`${import.meta.env.VITE_BACKEND_URL}/radio?id=${selectedLocation.id}`);
+    audio.autoplay = true;
+    audioRef.current = audio;
+    
+    // Handle playback events
+    const handlePlayEvent = () => {
+      setIsPlaying(true);
+      setPlayingLocation(selectedLocation);
+    };
+    
+    const handleErrorEvent = (e: Event) => {
+      console.error('Audio playback error:', e);
+      // Only show error if we're still trying to play this audio
+      if (audioRef.current === audio) {
+        alert('Failed to play station. Please try again.');
+        setIsPlaying(false);
+        setPlayingLocation(null);
+      }
+    };
+    
+    audio.addEventListener('play', handlePlayEvent);
+    audio.addEventListener('error', handleErrorEvent);
+    
+    // Start playing
+    audio.play().catch(err => {
+      console.error('Play failed:', err);
+      if (audioRef.current === audio) {
+        alert('Failed to start playback. Please try again.');
+        setIsPlaying(false);
+        setPlayingLocation(null);
+      }
+    });
   };
 
   const handleStop = () => {
-    alert('Stop event triggered! Stopping playback...');
+    if (audioRef.current) {
+      // Remove event listeners before stopping to prevent error alerts
+      audioRef.current.removeEventListener('play', () => {});
+      audioRef.current.removeEventListener('error', () => {});
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
     setIsPlaying(false);
     setPlayingLocation(null);
   };
@@ -115,6 +162,16 @@ export default function Home() {
 
   useEffect(() => {
       handleSend();
+  }, []);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    };
   }, []);
 
   return (
