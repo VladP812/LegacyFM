@@ -3,18 +3,22 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
-import GlobeComponent, { type LocationPoint } from '../components/Globe';
+import GlobeComponent, { type LocationPoint, type ChatMessage as GlobeChatMessage } from '../components/Globe';
 import Card, { CardHeader, CardTitle, CardBody } from '../components/core/Card';
 import { TextPrimary, TextSecondary, GlassBorder, GlassHighlight } from '../assets/COLOURS';
 import { getAccentByIndex } from '../utils/colourUtils';
 import type {GetStationsResponseType} from "@shared/DTOs";
+import { getTalkSession, type ConversationRef, type UserRef } from '@talkjs/core';
 
 import Globe2Icon from '../assets/icons/globe-2.svg?react';
 import LocationPinIcon from '../assets/icons/location-pin.svg?react';
 import CompassIcon from '../assets/icons/compass.svg?react';
-import MapIcon from '../assets/icons/map.svg?react';
 import StarIcon from '../assets/icons/star.svg?react';
 import MagnifyingGlassIcon from '../assets/icons/magnifying-glass.svg?react';
+import CommentIcon from '../assets/icons/comment.svg?react';
+import PencilIcon from '../assets/icons/pencil.svg?react';
+
+type ChatMessage = GlobeChatMessage;
 
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<LocationPoint | null>(null);
@@ -24,11 +28,75 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchMode, setIsSearchMode] = useState<boolean>(false);
+  const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
+  const [chatMessage, setChatMessage] = useState<string>('');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const conversationRef = React.useRef<ConversationRef | null>(null);
+  const sessionRef = React.useRef<any>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const seenMessageIds = React.useRef<Set<string>>(new Set());
+
+  // Get user's geolocation on mount
+  useEffect(() => {
+    if (navigator.geolocation && isChatEnabled) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lon: longitude });
+          localStorage.setItem('user_lat', latitude.toString());
+          localStorage.setItem('user_lon', longitude.toString());
+          console.log('User location:', latitude, longitude);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          // Fallback to a default location if geolocation fails
+          const defaultLat = 51.5074; // London
+          const defaultLon = -0.1278;
+          setUserLocation({ lat: defaultLat, lon: defaultLon });
+          localStorage.setItem('user_lat', defaultLat.toString());
+          localStorage.setItem('user_lon', defaultLon.toString());
+        }
+      );
+    }
+  }, [isChatEnabled]);
 
   const handleLocationClick = (location: LocationPoint) => {
     setSelectedLocation(location);
     console.log('Location clicked:', location);
+
+    // Clear previous messages when switching stations
+    setChatMessages([]);
+    seenMessageIds.current.clear();
+
+    if (isChatEnabled && userLocation) {
+      const id = `${userLocation.lat}_${userLocation.lon}_${Date.now()}`;
+
+      const session = getTalkSession({
+        appId: 'tjEVyI9N',
+        // @ts-ignore
+        host: "durhack.talkjs.com",
+        userId: id,
+      });
+
+      sessionRef.current = session;
+
+      let user: UserRef = session.user(id);
+
+      user.set({ 
+        name: "user", 
+        custom: { 
+          lon: userLocation.lon.toString(), 
+          lat: userLocation.lat.toString() 
+        } 
+      });
+
+      const conversation: ConversationRef = session.conversation(location.id);
+
+      conversation.createIfNotExists();
+
+      conversationRef.current = conversation;
+    }
   };
 
   const handleClosePanel = () => {
@@ -94,6 +162,10 @@ export default function Home() {
     }
     setIsPlaying(false);
     setPlayingLocation(null);
+    
+    // Clear all chat messages when stopping
+    setChatMessages([]);
+    seenMessageIds.current.clear();
   };
 
   const handleMiniPlayerClick = () => {
@@ -107,18 +179,23 @@ export default function Home() {
       setIsLoading(true);
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/stations`);
       const data: GetStationsResponseType = res.data;
-      console.log(data);
+      console.log('API Response:', data);
+      console.log('Number of stations:', data.length);
       
-      const transformedStations: LocationPoint[] = data.map((station, index) => ({
-        id: station.id.toString(),
-        name: station.name,
-        locationName: `${station.city}, ${station.country}`,
-        description: station.description,
-        lat: station.lat,
-        lon: station.lon,
-        color: getAccentByIndex(index)
-      }));
+      const transformedStations: LocationPoint[] = data.map((station, index) => {
+        console.log('Transforming station:', station);
+        return {
+          id: station.id.toString(),
+          name: station.name,
+          locationName: `${station.city}, ${station.country}`,
+          description: station.description,
+          lat: station.lat,
+          lon: station.lon,
+          color: getAccentByIndex(index)
+        };
+      });
       
+      console.log('Transformed stations:', transformedStations);
       setStations(transformedStations);
       setIsLoading(false);
     }
@@ -162,9 +239,124 @@ export default function Home() {
     }
   };
 
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatMessage.trim() || !conversationRef.current || !sessionRef.current) return;
+
+    try {
+      conversationRef.current.send({
+        text: chatMessage,
+        custom: {
+          lat: userLocation ? userLocation.lat.toString() : '0',
+          lon: userLocation ? userLocation.lon.toString() : '0'
+        }
+      });
+      
+      console.log('Sent chat message:', chatMessage);
+      setChatMessage('');
+    } catch (err) {
+      console.error('Error sending message:', err);
+    }
+  };
+
   useEffect(() => {
       handleSend();
   }, []);
+
+  // Handle chat toggle when already playing - subscribe to messages if chat is turned on
+  useEffect(() => {
+    if (isChatEnabled && isPlaying && playingLocation && conversationRef.current && !seenMessageIds.current.size) {
+      let isFirstLoad = true;
+      
+      conversationRef.current.subscribeMessages((messages) => {
+        // Only process new messages we haven't seen
+        if (messages && messages.length > 0) {
+          // On first load, mark all existing messages as seen without displaying them
+          if (isFirstLoad) {
+            messages.forEach((msg: any) => {
+              seenMessageIds.current.add(msg.id);
+            });
+            isFirstLoad = false;
+            return;
+          }
+          
+          messages.forEach((msg: any) => {
+            if (seenMessageIds.current.has(msg.id)) return;
+            
+            seenMessageIds.current.add(msg.id);
+            
+            const senderLat = parseFloat(msg.custom?.lat || playingLocation.lat);
+            const senderLon = parseFloat(msg.custom?.lon || playingLocation.lon);
+            
+            const newChatMessage: ChatMessage = {
+              id: msg.id,
+              text: msg.plaintext || '',
+              lat: senderLat,
+              lon: senderLon,
+              timestamp: Date.now(),
+              color: playingLocation.color || getAccentByIndex(0)
+            };
+            
+            setChatMessages(prev => [...prev, newChatMessage]);
+            
+            setTimeout(() => {
+              setChatMessages(prev => prev.filter(chatMsg => chatMsg.id !== msg.id));
+            }, 5000);
+          });
+        }
+      });
+    }
+  }, [isChatEnabled, isPlaying, playingLocation]);
+
+  // Random message generator - sends 1 message every 3-5 seconds from random locations when playing
+  useEffect(() => {
+    if (!isChatEnabled || !conversationRef.current || !sessionRef.current || !isPlaying || !playingLocation) return;
+
+    const sendRandomMessage = () => {
+      if (conversationRef.current && sessionRef.current) {
+        const interestingMessages = [            
+              "Hello Durhack! 👋",
+              "Durhack 2025 🚀",
+              "Hacking away 💻",
+              "Durham vibes ⚡",
+              "Team Durhack! 🏆",
+              "Coding is fun! 😄",
+              "We love Durhack! ❤️",
+              "Exploring cultures 🌍",
+              "Sharing stories 📖",
+              "Embracing traditions 🏺",
+              "Learning 📚",
+              "Celebrating diversity 🌈",
+              "Building bridges 🌉",
+              "Legacy FM rocks! 🎶",
+              "Solaris the goat! 🐐"
+            ];
+        
+        const randomMessage = interestingMessages[Math.floor(Math.random() * interestingMessages.length)];
+        
+        // Generate truly random coordinates
+        const randomLat = (Math.random() * 180 - 90).toFixed(4);
+        const randomLon = (Math.random() * 360 - 180).toFixed(4);
+           
+        // Send message as this random user
+        conversationRef.current.send({
+          text: randomMessage,
+          custom: {
+            lat: randomLat,
+            lon: randomLon
+          }
+        });
+      }
+
+      // Schedule next message with random delay between 0.5-0.75 seconds
+      const nextDelay = 500 + Math.random() * 250;
+      timeoutId = setTimeout(sendRandomMessage, nextDelay);
+    };
+
+    let timeoutId = setTimeout(sendRandomMessage, 375); // Start after 375 milliseconds
+
+    return () => clearTimeout(timeoutId);
+  }, [isChatEnabled, isPlaying, playingLocation]);
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -183,6 +375,7 @@ export default function Home() {
           locations={stations}
           onLocationClick={handleLocationClick}
           selectedLocation={selectedLocation}
+          chatMessages={chatMessages}
         />
       </GlobeSection>
 
@@ -194,33 +387,66 @@ export default function Home() {
             </IconWrapper>
             <div style={{ flex: 1 }}>
               <HeaderTitle>Legacy FM</HeaderTitle>
-              <HeaderSubtitle>Discover dying traditions, cultures, and stories</HeaderSubtitle>
+              <HeaderSubtitle>Discover fading traditions, cultures, and stories</HeaderSubtitle>
             </div>
             <SearchToggleButton onClick={() => setIsSearchMode(true)}>
               <MagnifyingGlassIcon width={64} height={64} />
             </SearchToggleButton>
           </HeaderContainer>
         ) : (
-          <SearchContainer>
-            <IconWrapper $color={getAccentByIndex(3)}>
-              <MagnifyingGlassIcon width={40} height={40} />
-            </IconWrapper>
-            <SearchFormContainer onSubmit={handleSearchSubmit}>
-              <SearchInput
-                type="text"
-                placeholder="Search stations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoFocus
-              />
-              <SearchSubmitButton type="submit">
-                Search
-              </SearchSubmitButton>
-            </SearchFormContainer>
-            <CloseSearchButton onClick={() => { setIsSearchMode(false); setSearchQuery(''); }}>
-              ×
-            </CloseSearchButton>
-          </SearchContainer>
+          <SearchExpandedContainer>
+            <SearchContainer>
+              <IconWrapper $color={getAccentByIndex(3)}>
+                <MagnifyingGlassIcon width={40} height={40} />
+              </IconWrapper>
+              <SearchFormContainer onSubmit={handleSearchSubmit}>
+                <SearchInput
+                  type="text"
+                  placeholder="Search with AI ✨"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                />
+                <SearchSubmitButton type="submit">
+                  Search
+                </SearchSubmitButton>
+              </SearchFormContainer>
+              <CloseSearchButton onClick={() => { setIsSearchMode(false); setSearchQuery(''); }}>
+                ×
+              </CloseSearchButton>
+            </SearchContainer>
+            
+            <StationListContainer>
+              <StationListHeader>All Stations ({stations.length})</StationListHeader>
+              <StationList>
+                {isLoading ? (
+                  <LoadingMessage>Loading stations...</LoadingMessage>
+                ) : stations.length === 0 ? (
+                  <EmptyMessage>No stations available</EmptyMessage>
+                ) : (
+                  stations.map((station, index) => (
+                    <StationItem
+                      key={station.id}
+                      onClick={() => {
+                        handleLocationClick(station);
+                        setIsSearchMode(false);
+                        setSearchQuery('');
+                      }}
+                      $isSelected={selectedLocation?.id === station.id}
+                    >
+                      <IconWrapper $color={station.color || getAccentByIndex(index)}>
+                        <LocationPinIcon width={20} height={20} />
+                      </IconWrapper>
+                      <StationInfo>
+                        <StationName>{station.name}</StationName>
+                        <StationLocation>{station.locationName}</StationLocation>
+                      </StationInfo>
+                    </StationItem>
+                  ))
+                )}
+              </StationList>
+            </StationListContainer>
+          </SearchExpandedContainer>
         )}
       </Card>
 
@@ -291,26 +517,40 @@ export default function Home() {
         </Card>
       )}
 
-      <Card position="bottom-left" minWidth="260px">
-        <CardTitle>Navigation Guide</CardTitle>
-        <InstructionItem>
-          <IconBadge $color={getAccentByIndex(0)}>
-            <CompassIcon width={24} height={24} />
-          </IconBadge>
-          <span>Drag to rotate the globe</span>
-        </InstructionItem>
-        <InstructionItem>
-          <IconBadge $color={getAccentByIndex(1)}>
-            <MapIcon width={24} height={24} />
-          </IconBadge>
-          <span>Scroll to zoom in/out</span>
-        </InstructionItem>
-        <InstructionItem>
-          <IconBadge $color={getAccentByIndex(2)}>
-            <LocationPinIcon width={24} height={24} />
-          </IconBadge>
-          <span>Click markers for details</span>
-        </InstructionItem>
+      <Card position="bottom-left" minWidth="320px">
+        <NavigationContainer>
+          <CardTitle>Navigation Guide</CardTitle>
+          <NavigationRow>
+            <InstructionsList>
+              <InstructionItem>
+                <IconBadge $color={getAccentByIndex(0)}>
+                  <CompassIcon width={24} height={24} />
+                </IconBadge>
+                <span>Drag to rotate the globe</span>
+              </InstructionItem>
+              <InstructionItem>
+                <IconBadge $color={getAccentByIndex(2)}>
+                  <LocationPinIcon width={24} height={24} />
+                </IconBadge>
+                <span>Click markers for details</span>
+              </InstructionItem>
+            </InstructionsList>
+            
+            <ButtonsRow>
+              <ToggleButton 
+                onClick={() => {
+                  setIsChatEnabled(!isChatEnabled);
+                }}
+                $isActive={isChatEnabled}
+              >
+                <ToggleIconWrapper $color={getAccentByIndex(3)}>
+                  <CommentIcon width={40} height={40} />
+                  {!isChatEnabled && <StrikeThroughLine />}
+                </ToggleIconWrapper>
+              </ToggleButton>
+            </ButtonsRow>
+          </NavigationRow>
+        </NavigationContainer>
       </Card>
 
       {/* Mini Player - shown when playing but not selected */}
@@ -338,6 +578,27 @@ export default function Home() {
             </LiveStreamIndicator>
           </MiniPlayerContainer>
         </Card>
+      )}
+
+      {/* Chat Input Box - shown when chat is enabled AND playing */}
+      {isChatEnabled && selectedLocation && isPlaying && playingLocation?.id === selectedLocation.id && (
+        <ChatCardContainer>
+          <Card minWidth="400px" width="500px">
+            <ChatForm onSubmit={handleChatSubmit}>
+              <ChatFormContent>
+                <ChatInput
+                  type="text"
+                  placeholder="Type your message..."
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                />
+                <ChatSendButton type="submit">
+                  <PencilIcon width={32} height={32} />
+                </ChatSendButton>
+              </ChatFormContent>
+            </ChatForm>
+          </Card>
+        </ChatCardContainer>
       )}
     </PageContainer>
   );
@@ -487,19 +748,44 @@ const CoordinatesGroup = styled.div`
 const InstructionItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   color: ${TextSecondary};
-  font-size: 0.9rem;
-  margin: 1rem 0;
+  font-size: 0.85rem;
   font-weight: 400;
+`;
+
+const NavigationContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const NavigationRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+`;
+
+const InstructionsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const ButtonsRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 `;
 
 const IconBadge = styled.div<{ $color: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
   background: ${props => `${props.$color}20`};
   border: 2px solid ${props => `${props.$color}40`};
@@ -508,6 +794,62 @@ const IconBadge = styled.div<{ $color: string }>`
   svg {
     fill: ${props => props.$color};
   }
+`;
+
+const ToggleButton = styled.button<{ $isActive: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  min-height: 64px;
+  background: ${props => props.$isActive ? GlassHighlight : `${GlassHighlight}80`};
+  border: 2px solid ${props => props.$isActive ? GlassBorder : `${GlassBorder}60`};
+  border-radius: 8px;
+  color: ${props => props.$isActive ? TextPrimary : TextSecondary};
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${GlassHighlight};
+    border-color: ${GlassBorder};
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const ToggleIconWrapper = styled.div<{ $color: string }>`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 8px;
+  background: ${props => `${props.$color}20`};
+  border: 2px solid ${props => `${props.$color}40`};
+  flex-shrink: 0;
+  
+  svg {
+    fill: ${props => props.$color};
+  }
+`;
+
+const StrikeThroughLine = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 4px;
+  background: #394240;
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  pointer-events: none;
+  z-index: 10;
 `;
 
 const LocationTitle = styled.h3`
@@ -732,11 +1074,17 @@ const SearchToggleButton = styled.button`
   }
 `;
 
+const SearchExpandedContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
 const SearchContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-  height: 56px;
+  height: 38px;
 `;
 
 const SearchFormContainer = styled.form`
@@ -744,6 +1092,110 @@ const SearchFormContainer = styled.form`
   align-items: center;
   gap: 0.75rem;
   flex: 1;
+`;
+
+const StationListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const StationListHeader = styled.h3`
+  font-size: 0.9rem;
+  color: ${TextSecondary};
+  margin: 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const StationList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${GlassHighlight};
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: ${GlassBorder};
+    border-radius: 3px;
+    
+    &:hover {
+      background: ${getAccentByIndex(3)};
+    }
+  }
+`;
+
+const StationItem = styled.div<{ $isSelected: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: ${props => props.$isSelected ? `${getAccentByIndex(0)}20` : GlassHighlight};
+  border: 2px solid ${props => props.$isSelected ? getAccentByIndex(0) : GlassBorder};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${props => props.$isSelected ? `${getAccentByIndex(0)}30` : `${getAccentByIndex(3)}15`};
+    border-color: ${props => props.$isSelected ? getAccentByIndex(0) : getAccentByIndex(3)};
+    transform: translateX(4px);
+  }
+  
+  &:active {
+    transform: translateX(2px);
+  }
+`;
+
+const StationInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+`;
+
+const StationName = styled.div`
+  font-size: 1rem;
+  color: ${TextPrimary};
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const StationLocation = styled.div`
+  font-size: 0.85rem;
+  color: ${TextSecondary};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: ${TextSecondary};
+  font-size: 0.95rem;
+`;
+
+const EmptyMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: ${TextSecondary};
+  font-size: 0.95rem;
 `;
 
 const SearchInput = styled.input`
@@ -812,5 +1264,73 @@ const CloseSearchButton = styled.button`
   
   &:active {
     transform: scale(0.95);
+  }
+`;
+
+const ChatCardContainer = styled.div`
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+`;
+
+const ChatForm = styled.form`
+  width: 100%;
+`;
+
+const ChatFormContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const ChatInput = styled.input`
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: ${TextPrimary};
+  font-size: 1rem;
+  padding: 0.5rem;
+  outline: none;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  
+  &::placeholder {
+    color: ${TextSecondary};
+  }
+`;
+
+const ChatSendButton = styled.button`
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  svg {
+    fill: ${TextPrimary};
+    transition: all 0.2s ease;
+  }
+  
+  &:hover svg {
+    fill: ${getAccentByIndex(5)};
+    transform: translateY(-2px);
+  }
+  
+  &:active svg {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  &:disabled svg {
+    transform: none;
   }
 `;

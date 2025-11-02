@@ -20,6 +20,15 @@ interface LocationPoint {
   color?: string;
 }
 
+interface ChatMessage {
+  id: string;
+  text: string;
+  lat: number;
+  lon: number;
+  timestamp: number;
+  color: string;
+}
+
 interface PointMarkerProps {
   position: THREE.Vector3;
   location: LocationPoint;
@@ -27,6 +36,11 @@ interface PointMarkerProps {
   isHovered: boolean;
   onHover: (hovered: boolean) => void;
   isSelected: boolean;
+}
+
+interface ChatMessageMarkerProps {
+  position: THREE.Vector3;
+  message: ChatMessage;
 }
 
 // Convert lat/lon to 3D coordinates on a sphere
@@ -117,6 +131,109 @@ const PointMarker: React.FC<PointMarkerProps> = ({ position, location, onClick, 
   );
 };
 
+// Chat message marker that pops up and fades out
+const ChatMessageMarker: React.FC<ChatMessageMarkerProps> = ({ position, message }) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const startTime = useRef(Date.now());
+  const { camera } = useThree();
+
+  useFrame((state) => {
+    const elapsed = (Date.now() - startTime.current) / 1000; // in seconds
+    const duration = 5; // 5 seconds total
+    
+    if (elapsed > duration) return;
+
+    if (meshRef.current) {
+      // Pop up animation (first 0.5 seconds)
+      const popProgress = Math.min(elapsed / 0.5, 1);
+      const popScale = popProgress < 1 ? popProgress : 1;
+      
+      // Fade out animation (last 2 seconds)
+      const fadeStart = duration - 2;
+      const opacity = elapsed > fadeStart 
+        ? 1 - ((elapsed - fadeStart) / 2)
+        : 1;
+      
+      // Scale and position
+      const scale = popScale * (1 + Math.sin(state.clock.elapsedTime * 2) * 0.1);
+      meshRef.current.scale.setScalar(scale);
+      
+      // Float upward
+      const floatOffset = elapsed * 0.05;
+      const adjustedPosition = position.clone().normalize().multiplyScalar(1.01 + floatOffset);
+      meshRef.current.position.copy(adjustedPosition);
+      
+      // Face camera
+      meshRef.current.quaternion.copy(camera.quaternion);
+      
+      // Update opacity
+      (meshRef.current.material as THREE.MeshBasicMaterial).opacity = opacity;
+    }
+  });
+
+  // Create canvas texture for text bubble
+  const bubbleTexture = React.useMemo(() => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    
+    canvas.width = 512;
+    canvas.height = 120;
+    
+    const bubbleHeight = 100;
+    const padding = 20;
+    
+    const textContent = message.text.length > 40 ? message.text.substring(0, 40) + '...' : message.text;
+    
+    // Measure text to get bubble width
+    ctx.font = 'bold 32px Arial';
+    const textMetrics = ctx.measureText(textContent);
+    const bubbleWidth = Math.max(textMetrics.width + 40, 200);
+    
+    // Draw message bubble background (semi-transparent dark)
+    ctx.fillStyle = 'rgba(3, 24, 16, 0.9)';
+    ctx.beginPath();
+    ctx.roundRect(padding, (canvas.height - bubbleHeight) / 2, bubbleWidth, bubbleHeight, 16);
+    ctx.fill();
+    
+    // Draw message bubble border using message color
+    ctx.strokeStyle = message.color || getAccentByIndex(0);
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(padding, (canvas.height - bubbleHeight) / 2, bubbleWidth, bubbleHeight, 16);
+    ctx.stroke();
+    
+    // Draw text (white)
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 32px Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(textContent, padding + 20, canvas.height / 2);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+  }, [message.text, message.color]);
+
+  if (!bubbleTexture) return null;
+
+  return (
+    <group>
+      {/* Text bubble */}
+      <mesh ref={meshRef}>
+        <planeGeometry args={[0.4, 0.1]} />
+        <meshBasicMaterial
+          map={bubbleTexture}
+          transparent
+          opacity={1}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  );
+};
+
 // Stars component for background
 const Stars: React.FC = () => {
   const starsRef = useRef<THREE.Points>(null);
@@ -183,10 +300,12 @@ const Globe: React.FC<{
   locations: LocationPoint[]; 
   onLocationClick?: (location: LocationPoint) => void;
   selectedLocation: LocationPoint | null;
+  chatMessages?: ChatMessage[];
 }> = ({
   locations,
   onLocationClick,
   selectedLocation,
+  chatMessages = [],
 }) => {
   const groupRef = useRef<THREE.Group>(null);
   const controlsRef = useRef<any>(null);
@@ -264,6 +383,18 @@ const Globe: React.FC<{
             />
           );
         })}
+
+        {/* Render chat messages */}
+        {chatMessages.map((message) => {
+          const position = latLonToVector3(message.lat, message.lon, 1.01);
+          return (
+            <ChatMessageMarker
+              key={message.id}
+              position={position}
+              message={message}
+            />
+          );
+        })}
       </group>
 
       <ambientLight intensity={1.2} />
@@ -286,12 +417,14 @@ export interface GlobeComponentProps {
   locations?: LocationPoint[];
   onLocationClick?: (location: LocationPoint) => void;
   selectedLocation?: LocationPoint | null;
+  chatMessages?: ChatMessage[];
 }
 
 const GlobeComponent: React.FC<GlobeComponentProps> = ({ 
   locations = [], 
   onLocationClick,
-  selectedLocation = null 
+  selectedLocation = null,
+  chatMessages = []
 }) => {
   const defaultLocations: LocationPoint[] = [
     { id: '1', name: 'A', locationName: 'New York, USA', description: 'The Big Apple', lat: 40.7128, lon: -74.006, color: getAccentByIndex(0) },
@@ -315,6 +448,7 @@ const GlobeComponent: React.FC<GlobeComponentProps> = ({
           locations={pointsToRender} 
           onLocationClick={onLocationClick}
           selectedLocation={selectedLocation}
+          chatMessages={chatMessages}
         />
       </Canvas>
       <FloatingOrbs>
@@ -328,7 +462,7 @@ const GlobeComponent: React.FC<GlobeComponentProps> = ({
 };
 
 export default GlobeComponent;
-export type { LocationPoint };
+export type { LocationPoint, ChatMessage };
 
 import { accentFountain } from '../assets/COLOURS';
 
@@ -336,7 +470,6 @@ const GlobeContainer = styled.div`
   width: 100%;
   height: 100vh;
   background: radial-gradient(ellipse at center, ${accentApricot}05 0%, ${accentFountain}03 1%, #000000 100%);
-  // background: black;
   position: relative;
   overflow: hidden;
 `;
