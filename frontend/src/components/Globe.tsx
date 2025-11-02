@@ -6,7 +6,7 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import styled from 'styled-components';
-import { BrandPrimary, BrandSecondary, BrandTertiary, BrandQuaternary } from '../assets/COLOURS';
+import { BrandPrimary, BrandSecondary, BrandTertiary, BrandQuaternary, accentApricot } from '../assets/COLOURS';
 import { getAccentByIndex } from '../utils/colourUtils';
 
 // Types
@@ -131,21 +131,28 @@ const Globe: React.FC<{
   const targetDistance = useRef(2);
   const isAnimating = useRef(false);
   const animationProgress = useRef(0);
+  const previousSelectedId = useRef<string | null>(null);
 
   const texture = useLoader(THREE.TextureLoader, '/map.jpg');
 
   const handleLocationClick = (location: LocationPoint) => {
     onLocationClick?.(location);
-    
-    const pointPosition = latLonToVector3(location.lat, location.lon, 1);
-    targetPosition.current = pointPosition.clone().normalize().multiplyScalar(targetDistance.current);
-    isAnimating.current = true;
-    animationProgress.current = 0;
   };
+
+  // Trigger animation when selectedLocation changes
+  React.useEffect(() => {
+    if (selectedLocation && selectedLocation.id !== previousSelectedId.current) {
+      const pointPosition = latLonToVector3(selectedLocation.lat, selectedLocation.lon, 1);
+      targetPosition.current = pointPosition.clone().normalize().multiplyScalar(targetDistance.current);
+      isAnimating.current = true;
+      animationProgress.current = 0;
+      previousSelectedId.current = selectedLocation.id;
+    }
+  }, [selectedLocation]);
 
   useFrame(() => {
     if (isAnimating.current && controlsRef.current) {
-      animationProgress.current += 0.008;
+      animationProgress.current += 0.012;
       
       if (animationProgress.current >= 1) {
         animationProgress.current = 1;
@@ -153,10 +160,10 @@ const Globe: React.FC<{
       }
 
       const ease = 1 - Math.pow(1 - animationProgress.current, 3);
-      camera.position.lerp(targetPosition.current, ease * 0.05);
+      camera.position.lerp(targetPosition.current, ease * 0.06);
       
       if (controlsRef.current.target) {
-        controlsRef.current.target.lerp(new THREE.Vector3(0, 0, 0), ease * 0.05);
+        controlsRef.current.target.lerp(new THREE.Vector3(0, 0, 0), ease * 0.06);
       }
       
       controlsRef.current.update();
@@ -255,12 +262,12 @@ const GlobeComponent: React.FC<GlobeComponentProps> = ({
 export default GlobeComponent;
 export type { LocationPoint };
 
-import { accentFountain, accentAstra } from '../assets/COLOURS';
+import { accentFountain } from '../assets/COLOURS';
 
 const GlobeContainer = styled.div`
   width: 100%;
   height: 100vh;
-  background: radial-gradient(ellipse at center, ${accentAstra}15 0%, ${accentFountain}08 50%, #050510 100%);
+  background: radial-gradient(ellipse at center, ${accentApricot}15 0%, ${accentFountain}08 50%, #050510 100%);
   position: relative;
   overflow: hidden;
 `;
