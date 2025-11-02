@@ -54,9 +54,9 @@ const PointMarker: React.FC<PointMarkerProps> = ({ position, location, onClick, 
       meshRef.current.quaternion.copy(state.camera.quaternion);
     }
 
-    if (glowRef.current) {
+    if (glowRef.current && isSelected) {
       const glowPulse = 1 + Math.sin(state.clock.elapsedTime * 3) * 0.3;
-      glowRef.current.scale.setScalar(isSelected ? 2.5 * glowPulse : 0);
+      glowRef.current.scale.setScalar(2.5 * glowPulse);
       glowRef.current.quaternion.copy(state.camera.quaternion);
     }
 
@@ -83,15 +83,18 @@ const PointMarker: React.FC<PointMarkerProps> = ({ position, location, onClick, 
   return (
     <group position={position}>
       {/* Glow effect for selected */}
-      <mesh ref={glowRef}>
-        <circleGeometry args={[0.02, 32]} />
-        <meshBasicMaterial
-          color={location.color}
-          transparent
-          opacity={0.4}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+      {isSelected && (
+        <mesh ref={glowRef}>
+          <circleGeometry args={[0.02, 32]} />
+          <meshBasicMaterial
+            color={location.color}
+            transparent
+            opacity={0.4}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
       
       {/* Main marker */}
       <mesh
@@ -106,9 +109,72 @@ const PointMarker: React.FC<PointMarkerProps> = ({ position, location, onClick, 
           transparent
           opacity={isHovered ? 1 : 0.95}
           side={THREE.DoubleSide}
+          depthTest={true}
+          depthWrite={true}
         />
       </mesh>
     </group>
+  );
+};
+
+// Stars component for background
+const Stars: React.FC = () => {
+  const starsRef = useRef<THREE.Points>(null);
+  const { camera } = useThree();
+  const initialCameraRotation = useRef(new THREE.Euler());
+
+  React.useEffect(() => {
+    initialCameraRotation.current.copy(camera.rotation);
+  }, [camera]);
+
+  const starGeometry = React.useMemo(() => {
+    const geometry = new THREE.BufferGeometry();
+    const starCount = 800;
+    const positions = new Float32Array(starCount * 3);
+    const sizes = new Float32Array(starCount);
+
+    for (let i = 0; i < starCount; i++) {
+      // Create stars in a sphere around the scene
+      const radius = 50 + Math.random() * 50;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+
+      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = radius * Math.cos(phi);
+
+      sizes[i] = Math.random() * 1.5 + 0.5;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    return geometry;
+  }, []);
+
+  useFrame(() => {
+    if (starsRef.current) {
+      // Parallax effect - stars move slower than camera rotation
+      const deltaRotationX = (camera.rotation.x - initialCameraRotation.current.x) * 0.15;
+      const deltaRotationY = (camera.rotation.y - initialCameraRotation.current.y) * 0.15;
+      
+      starsRef.current.rotation.x = deltaRotationX;
+      starsRef.current.rotation.y = deltaRotationY;
+    }
+  });
+
+  return (
+    <points ref={starsRef}>
+      <bufferGeometry attach="geometry" {...starGeometry} />
+      <pointsMaterial
+        attach="material"
+        color="#ffffff"
+        size={0.2}
+        sizeAttenuation={true}
+        transparent={true}
+        opacity={0.9}
+        depthWrite={false}
+      />
+    </points>
   );
 };
 
@@ -133,7 +199,7 @@ const Globe: React.FC<{
   const animationProgress = useRef(0);
   const previousSelectedId = useRef<string | null>(null);
 
-  const texture = useLoader(THREE.TextureLoader, '/map.jpg');
+  const texture = useLoader(THREE.TextureLoader, '/mapLight2.jpg');
 
   const handleLocationClick = (location: LocationPoint) => {
     onLocationClick?.(location);
@@ -172,6 +238,8 @@ const Globe: React.FC<{
 
   return (
     <>
+      <Stars />
+      
       <group ref={groupRef}>
         <mesh>
           <sphereGeometry args={[1, 64, 64]} />
@@ -267,7 +335,8 @@ import { accentFountain } from '../assets/COLOURS';
 const GlobeContainer = styled.div`
   width: 100%;
   height: 100vh;
-  background: radial-gradient(ellipse at center, ${accentApricot}15 0%, ${accentFountain}08 50%, #050510 100%);
+  background: radial-gradient(ellipse at center, ${accentApricot}05 0%, ${accentFountain}03 1%, #000000 100%);
+  // background: black;
   position: relative;
   overflow: hidden;
 `;

@@ -1,0 +1,1 @@
+ALTER TABLE "radio_stations" ADD COLUMN "voice_id" text NOT NULL;

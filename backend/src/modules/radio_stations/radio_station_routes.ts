@@ -25,7 +25,8 @@ export const radioStationRoutes = (fastify: FastifyInstance, opts: any) => {
                     country: stationDb.country,
                     description: stationDb.description,
                     lat: stationDb.lat,
-                    lon: stationDb.lon
+                    lon: stationDb.lon,
+                    voiceId: stationDb.voiceId
                 });
             }
             return stations;

@@ -15,6 +15,13 @@
       "when": 1762031090384,
       "tag": "0001_left_silver_sable",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762055738029,
+      "tag": "0002_glossy_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

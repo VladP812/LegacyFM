@@ -61,7 +61,6 @@ export default function Home() {
       console.error('Audio playback error:', e);
       // Only show error if we're still trying to play this audio
       if (audioRef.current === audio) {
-        alert('Failed to play station. Please try again.');
         setIsPlaying(false);
         setPlayingLocation(null);
       }
@@ -74,7 +73,6 @@ export default function Home() {
     audio.play().catch(err => {
       console.error('Play failed:', err);
       if (audioRef.current === audio) {
-        alert('Failed to start playback. Please try again.');
         setIsPlaying(false);
         setPlayingLocation(null);
       }
