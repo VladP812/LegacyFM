@@ -1,4 +1,4 @@
-import { GetStationsResponse, GetStationsResponseType } from "@shared/DTOs";
+import { GetRadioStreamQueryString, GetStationsResponse, GetStationsResponseType } from "@shared/DTOs";
 import { FastifyInstance } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
 import { radio_stations } from "../../schemas";
@@ -27,4 +27,14 @@ export const radioStationRoutes = (fastify: FastifyInstance, opts: any) => {
             return stations;
         }
     );
+
+    fastify.withTypeProvider<ZodTypeProvider>().get("/radio/:id/station", {
+        schema: {
+            querystring: GetRadioStreamQueryString
+        }
+    },
+    async (req, res) => {
+        const stationId = req.query.id;
+        res.header("content-type", "audio/mpeg");
+    });
 };

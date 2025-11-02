@@ -41,6 +41,6 @@ async function cacheAudio(fastify: FastifyInstance) : Promise<void> {
     for (const station of stations) {
         const text: string = await generatePodcastText(fastify, station, true);
         const audio = await generatePodcastSpeech(text);
-        fastify.redis.set(`${station.country}:${station.city}`, audio);
+        fastify.redis.set(`${station.id}`, audio);
     }
 }
