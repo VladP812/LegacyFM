@@ -3,7 +3,7 @@ import { FastifyInstance } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
 import { radio_stations } from "../../schemas";
 import { Readable } from "stream";
-import { createSyncedAudioStream, getCurrentStreamPosition, radioStreams, updateRadioStream } from "./radio_station_services";
+import { createSyncedAudioStream, getCurrentStreamPosition, radioStreams, startRadioStream } from "./radio_station_services";
 
 
 
@@ -39,41 +39,32 @@ export const radioStationRoutes = (fastify: FastifyInstance, opts: any) => {
         }
     },
     async (req, res) => {
-            const id = Number(req.query.id);
-    
-    // Check if stream exists in memory
-    let stream = radioStreams.get(id);
-    
-    if (!stream) {
-        // Load from Redis if not in memory
-        const audioBuffer = await fastify.redis.getBuffer(`${id}`);
-        if (!audioBuffer) return res.code(404).send();
-        
-        // Estimate duration based on buffer size (adjust based on your audio format)
-        // For 24kHz, 16-bit mono: bytes / (24000 * 2) * 1000
-        const duration = (audioBuffer.length / (24000 * 2)) * 1000;
-        
-        updateRadioStream(id, audioBuffer, duration);
-        stream = radioStreams.get(id)!;
-    }
-    
-    // Calculate where in the stream we currently are
-    const currentPosition = getCurrentStreamPosition(stream);
-    
-    // Create a synced stream starting from current position
-    const audioStream = createSyncedAudioStream(stream.buffer, currentPosition);
-    
-    // Set appropriate headers for audio streaming
-    res.type('audio/mpeg'); // or 'audio/wav', 'audio/mp3' depending on your format
-    res.header('Cache-Control', 'no-cache');
-    res.header('Connection', 'keep-alive');
-    res.header('Transfer-Encoding', 'chunked');
-    
-    // Handle client disconnect
-    req.raw.on('close', () => {
-        audioStream.destroy();
-    });
-    
-    return res.send(audioStream);
+        const id = Number(req.query.id);
+
+        // Check if stream exists in memory
+        let radioStream = radioStreams.get(id);
+
+        if (!radioStream) {
+            fastify.log.error(`Stream for radio station id ${id} is not running - how come?`);
+            return res.code(500).send("Radio station is idle.");
+        }
+
+        // Calculate where in the stream we currently are
+        const currentPosition = getCurrentStreamPosition(radioStream);
+
+        // Create a synced stream starting from current position
+        const audioStream = createSyncedAudioStream(radioStream.buffer, currentPosition, 24000);
+
+        res.type('audio/wav');
+        res.header('cache-control', 'no-cache');
+        res.header('pragma', 'no-cache');
+        res.header('transfer-encoding', 'chunked');
+
+        // Handle client disconnect
+        req.raw.on('close', () => {
+            audioStream.destroy();
+        });
+
+        return res.send(audioStream);
     });
 }
