@@ -3,7 +3,7 @@ import { TextPrimary, TextSecondary, GlassBg, GlassBorder, GlassHighlight } from
 
 interface CardProps {
   children: React.ReactNode;
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center-right';
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center-right' | 'center-left';
   width?: string;
   minWidth?: string;
   className?: string;
@@ -109,13 +109,32 @@ const StyledCard = styled.div<{ $position?: string; $width?: string; $minWidth: 
             }
           }
           
+          @media (max-width: 1024px) {
+            top: 1rem;
+            right: 1rem;
+            max-height: calc(100vh - 2rem);
+          }
+          
           @media (max-width: 768px) {
             right: 1rem;
             left: 1rem;
             width: auto;
-            top: auto;
-            bottom: 1rem;
-            max-height: 70vh;
+            top: 1rem;
+            bottom: auto;
+            max-height: calc(100vh - 10rem);
+          }
+        `;
+      case 'center-left':
+        return `
+          position: absolute;
+          top: 2rem;
+          left: calc(280px + 2rem + 1.5rem);
+          
+          @media (max-width: 768px) {
+            left: 1rem;
+            right: 1rem;
+            top: 5rem;
+            min-width: auto;
           }
         `;
       default:
