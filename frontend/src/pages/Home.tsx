@@ -84,9 +84,8 @@ export default function Home() {
     if (!searchQuery.trim()) return;
 
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/search`, {
-        params: { prompt: searchQuery }
-      });
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/search?prompt=${encodeURIComponent(searchQuery)}`);
+      console.log('Search response:', res.data);
       const stationId = res.data.toString();
       
       // Check if search failed
