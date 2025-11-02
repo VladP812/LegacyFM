@@ -8,5 +8,6 @@ export const radio_stations = pgTable('radio_stations', {
     description: text("description").notNull(),
     lat: doublePrecision("latitude").notNull(),
     lon: doublePrecision("longitude").notNull(),
+    voiceId: text("voice_id").notNull()
 });
 

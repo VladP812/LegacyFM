@@ -19,9 +19,9 @@ export async function generatePodcastText(radioStation: RadioStationType, includ
     return text;
 }
 
-export async function generatePodcastSpeech(text: string) : Promise<Buffer> {
+export async function generatePodcastSpeech(text: string, voiceId: string) : Promise<Buffer> {
     const elevenLabs = new ElevenLabsClient();
-    const audioStream = await elevenLabs.textToSpeech.convert("JBFqnCBsd6RMkjVDRZzb",{
+    const audioStream = await elevenLabs.textToSpeech.convert(voiceId,{
         text,
         modelId: "eleven_monolingual_v1",
         outputFormat: 'mp3_44100_32'

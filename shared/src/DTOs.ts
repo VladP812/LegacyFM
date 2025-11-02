@@ -7,7 +7,8 @@ const RadioStationSchema = z.object({
     city: z.string().min(1),
     description: z.string().min(1),
     lat: z.number(),
-    lon: z.number()
+    lon: z.number(),
+    voiceId: z.string().min(1)
 }).strict();
 
 export const CountrySearchResponse = z.object({
