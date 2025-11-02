@@ -36,8 +36,11 @@ export function getCurrentStreamPosition(stream: RadioStream): number {
 export function createSyncedAudioStream(wavAudioBuffer: Buffer, startTimeMs: number, sampleRate: number): Readable {
     const bytesPerMs = 48; // 24kHz * 16-bit mono
     const wavHeaderSize = 44;
-    const startByte = wavHeaderSize + Math.floor(startTimeMs * bytesPerMs);
+    const bytesPerSample = 2; // 16-bit mono
+    let startByte = wavHeaderSize + Math.floor(startTimeMs * bytesPerMs);
 
+    // Align to sample boundary
+    startByte = wavHeaderSize + Math.floor((startByte - wavHeaderSize) / bytesPerSample) * bytesPerSample;
     // Slice PCM from start position to the end
     const pcmSlice = wavAudioBuffer.slice(startByte);
 
@@ -52,7 +55,6 @@ export function createSyncedAudioStream(wavAudioBuffer: Buffer, startTimeMs: num
                 this.push(null); // end of stream
                 return;
             }
-
             const chunk = bufferToSend.slice(offset, offset + size);
             offset += chunk.length;
             this.push(chunk);
