@@ -9,7 +9,7 @@ export async function cacheInitialAudio(fastify: FastifyInstance, opts?: any): P
     
     for (const station of stations) {
         fastify.log.info(`Getting podcast TEXT for ${station.name}`);
-        const text: string = await generatePodcastText(station, true);
+        const text: string = await generatePodcastText(station, false);
         fastify.log.info(`Getting podcast AUDIO for ${station.name}`);
         const audio: Buffer = await generatePodcastSpeech(text, station.voiceId);
         
